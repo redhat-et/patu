@@ -1,9 +1,11 @@
 {
     "cSpell.words": [
+        "CODEOWNERS",
         "datapath",
         "decapsulation",
         "kubernetes",
         "Microshift",
-        "Patu"
+        "Patu",
+        "vishnoianil"
     ]
 }
