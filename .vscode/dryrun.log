@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/vishnoianil/github/patu'
+make: Leaving directory '/home/vishnoianil/github/patu'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+

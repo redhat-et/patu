@@ -25,3 +25,4 @@ header:
     - '.github/'
     - '.vscode/'
     - 'CODEOWNERS'
+    - 'Makefile'
