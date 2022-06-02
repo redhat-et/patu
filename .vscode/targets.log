@@ -1,6 +1,5 @@
-make all --print-data-base --no-builtin-variables --no-builtin-rules --question
-make: *** No rule to make target 'all'.  Stop.
-
+make all -C /home/vishnoianil/github/patu/bpf --print-data-base --no-builtin-variables --no-builtin-rules --question
+# make: Entering directory '/home/vishnoianil/github/patu/bpf'
 # GNU Make 4.3
 # Built for x86_64-redhat-linux-gnu
 # Copyright (C) 1988-2020 Free Software Foundation, Inc.
@@ -8,7 +7,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue May 31 04:57:36 2022
+# Make data base, printed on Thu Jun  2 03:12:32 2022
 
 # Variables
 
@@ -22,6 +21,8 @@ VSCODE_CWD = /root
 MAKE_COMMAND := make
 # environment
 VSCODE_HANDLES_SIGPIPE = true
+# environment
+GOPATH = /root/go
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
 # environment
@@ -53,9 +54,9 @@ LANG = C
 # default
 .INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
 # makefile
-MAKEFLAGS = pqrR
+MAKEFLAGS = pqrRw
 # makefile
-CURDIR := /home/vishnoianil/github/patu
+CURDIR := /home/vishnoianil/github/patu/bpf
 # environment
 VSCODE_PIPE_LOGGING = true
 # environment
@@ -65,15 +66,15 @@ LESSOPEN = ||/usr/bin/lesspipe.sh %s
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
 # environment
-MFLAGS = -pqrR
+MFLAGS = -pqrRw
 # default
 .SHELLFLAGS := -c
 # environment
 HISTSIZE = 50000
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
-# makefile
-MAKEFILE_LIST := 
+# makefile (from 'Makefile', line 1)
+MAKEFILE_LIST := Makefile
 # automatic
 @F = $(notdir $@)
 # environment
@@ -86,6 +87,8 @@ VSCODE_VERBOSE_LOGGING = true
 XDG_SESSION_TYPE = tty
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
+# makefile (from 'Makefile', line 4)
+PROG_MOUNT_PATH = /sys/fs/bpf
 # automatic
 *F = $(notdir $*)
 # environment
@@ -115,7 +118,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = 10.2.16.75 49507 22
+SSH_CLIENT = 10.22.8.24 50777 22
 # environment
 VSCODE_LOG_NATIVE = false
 # automatic
@@ -124,6 +127,8 @@ VSCODE_LOG_NATIVE = false
 LS_COLORS = 
 # automatic
 +F = $(notdir $+)
+# makefile (from 'Makefile', line 6)
+MACROS := 
 # environment
 LESS = -R
 # 'override' directive
@@ -133,7 +138,7 @@ BROWSER = /root/.vscode-server/bin/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5/bin/
 # environment
 LOGNAME = root
 # makefile
-.DEFAULT_GOAL := 
+.DEFAULT_GOAL := compile
 # environment
 HISTCONTROL = ignoredups
 # environment
@@ -148,6 +153,8 @@ which_declare = typeset -f
 VSCODE_EXTHOST_WILL_SEND_SOCKET = true
 # environment
 DEBUGINFOD_URLS = https://debuginfod.centos.org/ 
+# makefile (from 'Makefile', line 13)
+TARGETS = patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skmsg.o patu_sockops.o
 # environment
 PAGER = less
 # environment
@@ -156,8 +163,12 @@ VSCODE_AGENT_FOLDER = /root/.vscode-server
 _ = /usr/bin/make
 # environment
 XDG_RUNTIME_DIR = /run/user/0
+# makefile (from 'Makefile', line 3)
+CFLAGS = -O2 -g  -Wall -target bpf -I/usr/include/$(shell uname -m)-linux-gnu
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-5498e269-5778-417d-9b8b-e609d5a6b49e.sock
+VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-6de73f30-3dab-4a6f-9e53-bdb734df912f.sock
+# environment
+GOMODCACHE = /root/go/pkg/mod
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -167,19 +178,25 @@ HOME = /root
 # environment
 SELINUX_LEVEL_REQUESTED = 
 # environment
-XDG_SESSION_ID = 6
+XDG_SESSION_ID = 3
+# environment
+GOPROXY = https://proxy.golang.org,direct
 # default
 .RECIPEPREFIX := 
 # automatic
 <F = $(notdir $<)
 # default
 SUFFIXES := 
+# makefile (from 'Makefile', line 7)
+DEBUG = 
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
+# makefile (from 'Makefile', line 2)
+CC = clang
 # environment
-SSH_CONNECTION = 10.2.16.75 49507 10.8.125.21 22
+SSH_CONNECTION = 10.22.8.24 50777 10.8.125.21 22
 # variable set hash-table stats:
-# Load=83/1024=8%, Rehash=0, Collisions=3/110=3%
+# Load=92/1024=9%, Rehash=0, Collisions=5/125=4%
 
 # Pattern-specific Variable Values
 
@@ -187,22 +204,42 @@ SSH_CONNECTION = 10.2.16.75 49507 10.8.125.21 22
 
 # Directories
 
-# . (device 64770, inode 166144): 11 files, no impossibilities.
+# . (device 64770, inode 805317885): 9 files, no impossibilities.
 
-# 11 files, no impossibilities in 1 directories.
+# 9 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
-# No implicit rules.
+%.o: %.c
+#  recipe to execute (from 'Makefile', line 16):
+	$(CC) $(CFLAGS) $(MACROS) -c $< -o $@
 
+# 1 implicit rules, 0 (0.0%) terminal.
 # Files
+
+compile: patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skmsg.o patu_sockops.o
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+patu_connect4.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  File does not exist.
+#  Last modified 2022-05-31 05:10:27.912670334
 #  File has been updated.
-#  Failed to be updated.
+#  Successfully updated.
+
+# Not a target:
+patu_skmsg.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
 # Not a target:
 .DEFAULT:
@@ -218,33 +255,48 @@ all:
 #  File has not been updated.
 
 # Not a target:
-makefile:
-#  Implicit rule search has been done.
-#  File does not exist.
-#  File has been updated.
-#  Failed to be updated.
+patu_recvmsg4.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+clean-obj:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 21):
+	[ -f patu_connect4.c ] && sudo rm -f $(TARGETS)
 
 # Not a target:
-GNUmakefile:
-#  Implicit rule search has been done.
-#  File does not exist.
-#  File has been updated.
-#  Failed to be updated.
+patu_sockops.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+patu_sendmsg4.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
 # files hash-table stats:
-# Load=6/1024=1%, Rehash=0, Collisions=0/15=0%
+# Load=11/1024=1%, Rehash=0, Collisions=0/26=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 19 / storage = 171 B / avg = 9 B
-# current buf: size = 8162 B / used = 171 B / count = 19 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 24 / storage = 289 B / avg = 12 B
+ 
+make: *** No rule to make target 'all'.  Stop.
 
-# strcache performance: lookups = 22 / hit rate = 13%
+# current buf: size = 8162 B / used = 289 B / count = 24 / avg = 12 B
+
+# strcache performance: lookups = 30 / hit rate = 20%
 # hash-table stats:
-# Load=19/8192=0%, Rehash=0, Collisions=0/22=0%
-# Finished Make data base on Tue May 31 04:57:36 2022
+# Load=24/8192=0%, Rehash=0, Collisions=0/30=0%
+# Finished Make data base on Thu Jun  2 03:12:32 2022
 
+# make: Leaving directory '/home/vishnoianil/github/patu/bpf'
  
