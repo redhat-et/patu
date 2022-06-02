@@ -4,8 +4,11 @@
         "datapath",
         "decapsulation",
         "kubernetes",
+        "logrus",
         "Microshift",
         "Patu",
+        "printk",
+        "skmsg",
         "vishnoianil"
     ],
     "files.associations": {

@@ -26,3 +26,5 @@ header:
     - '.vscode/'
     - 'CODEOWNERS'
     - 'Makefile'
+    - 'go.sum'
+    - 'go.mod'
