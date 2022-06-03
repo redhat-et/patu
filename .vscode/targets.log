@@ -7,7 +7,7 @@ make all -C /home/vishnoianil/github/patu/bpf --print-data-base --no-builtin-var
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Thu Jun  2 03:12:32 2022
+# Make data base, printed on Thu Jun  2 20:52:54 2022
 
 # Variables
 
@@ -15,6 +15,8 @@ make all -C /home/vishnoianil/github/patu/bpf --print-data-base --no-builtin-var
 LC_ALL = C
 # environment
 SELINUX_USE_CURRENT_RANGE = 
+# makefile (from 'Makefile', line 24)
+CGROUP2_PATH = $(shell mount | grep cgroup2 | awk '{print $$3}' | grep -v "^/host" | head -n 1)
 # environment
 VSCODE_CWD = /root
 # default
@@ -145,6 +147,8 @@ HISTCONTROL = ignoredups
 USER = root
 # default
 MAKE_VERSION := 4.3
+# 'override' directive
+.SHELLSTATUS := 0
 # environment
 TC_LIB_DIR = /usr/lib64/tc
 # environment
@@ -196,7 +200,7 @@ CC = clang
 # environment
 SSH_CONNECTION = 10.22.8.24 50777 10.8.125.21 22
 # variable set hash-table stats:
-# Load=92/1024=9%, Rehash=0, Collisions=5/125=4%
+# Load=94/1024=9%, Rehash=0, Collisions=5/132=4%
 
 # Pattern-specific Variable Values
 
@@ -217,7 +221,41 @@ SSH_CONNECTION = 10.22.8.24 50777 10.8.125.21 22
 # 1 implicit rules, 0 (0.0%) terminal.
 # Files
 
+attach-connect4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 33):
+	sudo bpftool cgroup attach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
+
+load-sendmsg4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 50):
+	sudo bpftool prog load patu_sendmsg4.o $(PROG_MOUNT_PATH)/sendmsg4
+
 compile: patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skmsg.o patu_sockops.o
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+attach-sendmsg4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 53):
+	sudo bpftool cgroup attach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
+
+unload-recvmsg4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 46):
+	sudo bpftool cgroup detach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
+	sudo rm $(PROG_MOUNT_PATH)/recvmsg4
+
+unload: unload-connect4 unload-sendmsg4 unload-recvmsg4 clean-obj
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -231,9 +269,24 @@ patu_connect4.o:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-31 05:10:27.912670334
+#  Last modified 2022-06-02 12:48:31.964448018
 #  File has been updated.
 #  Successfully updated.
+
+attach: attach-connect4 attach-sendmsg4 attach-recvmsg4
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+load-connect4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 30):
+ 
+make: *** No rule to make target 'all'.  Stop.
+
+	sudo bpftool prog load patu_connect4.o $(PROG_MOUNT_PATH)/connect4
 
 # Not a target:
 patu_skmsg.o:
@@ -241,11 +294,34 @@ patu_skmsg.o:
 #  Modification time never checked.
 #  File has not been updated.
 
+unload-sendmsg4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 56):
+	sudo bpftool cgroup detach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
+	sudo rm $(PROG_MOUNT_PATH)/sendmsg4
+
 # Not a target:
 .DEFAULT:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
+
+load-recvmsg4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 40):
+	sudo bpftool prog load patu_recvmsg4.o $(PROG_MOUNT_PATH)/recvmsg4
+
+unload-connect4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 36):
+	sudo bpftool cgroup detach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
+	sudo rm $(PROG_MOUNT_PATH)/connect4
 
 # Not a target:
 all:
@@ -256,6 +332,18 @@ all:
 
 # Not a target:
 patu_recvmsg4.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+attach-recvmsg4:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 43):
+	sudo bpftool cgroup attach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
+
+load: compile load-connect4 load-sendmsg4 load-recvmsg4
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -280,23 +368,20 @@ patu_sendmsg4.o:
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=11/1024=1%, Rehash=0, Collisions=0/26=0%
+# Load=23/1024=2%, Rehash=0, Collisions=0/49=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 24 / storage = 289 B / avg = 12 B
- 
-make: *** No rule to make target 'all'.  Stop.
+# strcache buffers: 1 (0) / strings = 36 / storage = 446 B / avg = 12 B
+# current buf: size = 8162 B / used = 446 B / count = 36 / avg = 12 B
 
-# current buf: size = 8162 B / used = 289 B / count = 24 / avg = 12 B
-
-# strcache performance: lookups = 30 / hit rate = 20%
+# strcache performance: lookups = 65 / hit rate = 44%
 # hash-table stats:
-# Load=24/8192=0%, Rehash=0, Collisions=0/30=0%
-# Finished Make data base on Thu Jun  2 03:12:32 2022
+# Load=36/8192=0%, Rehash=0, Collisions=0/65=0%
+# Finished Make data base on Thu Jun  2 20:52:54 2022
 
 # make: Leaving directory '/home/vishnoianil/github/patu/bpf'
  
