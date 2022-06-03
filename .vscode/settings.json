@@ -13,5 +13,6 @@
     ],
     "files.associations": {
         "helpers.h": "c"
-    }
+    },
+    "docker.imageBuildContextPath": "."
 }

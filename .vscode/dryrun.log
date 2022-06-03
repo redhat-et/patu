@@ -1,11 +1,9 @@
-make -C /home/vishnoianil/github/patu/bpf --dry-run --always-make --keep-going --print-directory
+make -C /home/vishnoianil/github/patu/bpf --dry-run --keep-going --print-directory
 make: Entering directory '/home/vishnoianil/github/patu/bpf'
 clang -O2 -g  -Wall -target bpf -I/usr/include/x86_64-linux-gnu  -c patu_connect4.c -o patu_connect4.o
 clang -O2 -g  -Wall -target bpf -I/usr/include/x86_64-linux-gnu  -c patu_recvmsg4.c -o patu_recvmsg4.o
- 
 clang -O2 -g  -Wall -target bpf -I/usr/include/x86_64-linux-gnu  -c patu_sendmsg4.c -o patu_sendmsg4.o
 clang -O2 -g  -Wall -target bpf -I/usr/include/x86_64-linux-gnu  -c patu_skmsg.c -o patu_skmsg.o
- 
 clang -O2 -g  -Wall -target bpf -I/usr/include/x86_64-linux-gnu  -c patu_sockops.c -o patu_sockops.o
 make: Leaving directory '/home/vishnoianil/github/patu/bpf'
  
