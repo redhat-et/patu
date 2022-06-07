@@ -1,10 +1,9 @@
 ---
 name: Bug Report
-about: Create an Issue to help us improve Project Patu
+about: Create an Issue to help and contribute to improve Project Patu
 title: "[Bug] Brief bug summary"
 labels: controlplane, Critical, dataplane, documentation, duplicate, good first issue,
-  help wanted, invalid, kind/bug, kind/enhancement, kind/feature, kind/performance,
-  kind/question, kind/scale
+  help wanted, invalid, kind/bug, kind/performance, kind/question, kind/scale
 assignees: vishnoianil
 
 ---
