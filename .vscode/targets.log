@@ -1,5 +1,8 @@
 make all -C /home/vishnoianil/github/patu/bpf --print-data-base --no-builtin-variables --no-builtin-rules --question
 # make: Entering directory '/home/vishnoianil/github/patu/bpf'
+ 
+make: *** No rule to make target 'all'.  Stop.
+
 # GNU Make 4.3
 # Built for x86_64-redhat-linux-gnu
 # Copyright (C) 1988-2020 Free Software Foundation, Inc.
@@ -7,7 +10,7 @@ make all -C /home/vishnoianil/github/patu/bpf --print-data-base --no-builtin-var
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Thu Jun  2 20:52:54 2022
+# Make data base, printed on Mon Jun  6 21:58:47 2022
 
 # Variables
 
@@ -120,7 +123,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = 10.22.8.24 50777 22
+SSH_CLIENT = 10.2.16.123 60520 22
 # environment
 VSCODE_LOG_NATIVE = false
 # automatic
@@ -170,7 +173,7 @@ XDG_RUNTIME_DIR = /run/user/0
 # makefile (from 'Makefile', line 3)
 CFLAGS = -O2 -g  -Wall -target bpf -I/usr/include/$(shell uname -m)-linux-gnu
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-6de73f30-3dab-4a6f-9e53-bdb734df912f.sock
+VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-903d8d42-f01a-48e2-819e-e0a594b18039.sock
 # environment
 GOMODCACHE = /root/go/pkg/mod
 # environment
@@ -182,7 +185,7 @@ HOME = /root
 # environment
 SELINUX_LEVEL_REQUESTED = 
 # environment
-XDG_SESSION_ID = 3
+XDG_SESSION_ID = 8
 # environment
 GOPROXY = https://proxy.golang.org,direct
 # default
@@ -198,7 +201,7 @@ DEBUG =
 # makefile (from 'Makefile', line 2)
 CC = clang
 # environment
-SSH_CONNECTION = 10.22.8.24 50777 10.8.125.21 22
+SSH_CONNECTION = 10.2.16.123 60520 10.8.125.21 22
 # variable set hash-table stats:
 # Load=94/1024=9%, Rehash=0, Collisions=5/132=4%
 
@@ -269,7 +272,7 @@ patu_connect4.o:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-06-02 12:48:31.964448018
+#  Last modified 2022-06-03 00:33:34.916962494
 #  File has been updated.
 #  Successfully updated.
 
@@ -283,9 +286,6 @@ load-connect4:
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 30):
- 
-make: *** No rule to make target 'all'.  Stop.
-
 	sudo bpftool prog load patu_connect4.o $(PROG_MOUNT_PATH)/connect4
 
 # Not a target:
@@ -296,6 +296,7 @@ patu_skmsg.o:
 
 unload-sendmsg4:
 #  Implicit rule search has not been done.
+ 
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 56):
@@ -343,7 +344,7 @@ attach-recvmsg4:
 #  recipe to execute (from 'Makefile', line 43):
 	sudo bpftool cgroup attach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
 
-load: compile load-connect4 load-sendmsg4 load-recvmsg4
+load: load-connect4 load-sendmsg4 load-recvmsg4
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -368,7 +369,7 @@ patu_sendmsg4.o:
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=23/1024=2%, Rehash=0, Collisions=0/49=0%
+# Load=23/1024=2%, Rehash=0, Collisions=0/48=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
@@ -378,10 +379,10 @@ patu_sendmsg4.o:
 # strcache buffers: 1 (0) / strings = 36 / storage = 446 B / avg = 12 B
 # current buf: size = 8162 B / used = 446 B / count = 36 / avg = 12 B
 
-# strcache performance: lookups = 65 / hit rate = 44%
+# strcache performance: lookups = 64 / hit rate = 43%
 # hash-table stats:
-# Load=36/8192=0%, Rehash=0, Collisions=0/65=0%
-# Finished Make data base on Thu Jun  2 20:52:54 2022
+# Load=36/8192=0%, Rehash=0, Collisions=0/64=0%
+# Finished Make data base on Mon Jun  6 21:58:47 2022
 
 # make: Leaving directory '/home/vishnoianil/github/patu/bpf'
  
