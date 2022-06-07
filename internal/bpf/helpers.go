@@ -22,11 +22,15 @@ import (
 	"strings"
 )
 
+const (
+	progPath	= "./bpf"
+)
 func loadBpfProg(debug bool) error {
 	if os.Getuid() != 0 {
 		return fmt.Errorf("eBPF program loading requires root privileges.")
 	}
-	cmd := exec.Command("make", "-C bpf", "load")
+	cmd := exec.Command("make", "load")
+	cmd.Dir = progPath
 	cmd.Env = os.Environ()
 	if debug {
 		cmd.Env = append(cmd.Env, "DEBUG=1")
@@ -35,7 +39,7 @@ func loadBpfProg(debug bool) error {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
-		return fmt.Errorf("\"%s %s \" failed with code: %d, err: %v", cmd.Path, strings.Join(cmd.Args, " "), code, err)
+		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
 	fmt.Printf("eBPF programs loaded successfully.")
 	return nil
@@ -45,25 +49,27 @@ func attachBpfProg() error {
 	if os.Getuid() != 0 {
 		return fmt.Errorf("eBPF program loading requires root privileges.")
 	}
-	cmd := exec.Command("make", "-C bpf", "attach")
+	cmd := exec.Command("make", "attach")
+	cmd.Dir = progPath
 	cmd.Env = os.Environ()
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
-		return fmt.Errorf("\"%s %s \" failed with code: %d, err: %v", cmd.Path, strings.Join(cmd.Args, " "), code, err)
+		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
 	fmt.Printf("eBPF programs attached successfully.")
 	return nil
 }
 
 func unloadBpfProg() error {
-	cmd := exec.Command("make", "-C bpf", "-k", "unload")
+	cmd := exec.Command("make", "unload")
+	cmd.Dir = progPath
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
-		return fmt.Errorf("\"%s %s \" failed with code: %d, err: %v", cmd.Path, strings.Join(cmd.Args, " "), code, err)
+		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
 	fmt.Printf("eBPF programs attached successfully.")
 	return nil

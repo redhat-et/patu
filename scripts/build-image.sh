@@ -16,4 +16,7 @@
 
 #!/bin/sh
 
-docker build --pull --rm -f "deploy/Dockerfile" -t patu:latest "." 
+echo "Building Image for ${KERNEL} kernel"
+
+docker build --build-arg kernel="${KERNEL}" --pull --rm -f "deploy/Dockerfile" -t patu:latest "." 
+docker image prune -f

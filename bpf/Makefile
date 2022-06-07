@@ -56,6 +56,6 @@ unload-sendmsg4:
 	sudo bpftool cgroup detach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
 	sudo rm $(PROG_MOUNT_PATH)/sendmsg4
 
-load: compile load-connect4 load-sendmsg4 load-recvmsg4
+load: load-connect4 load-sendmsg4 load-recvmsg4
 attach: attach-connect4 attach-sendmsg4 attach-recvmsg4
 unload: unload-connect4 unload-sendmsg4 unload-recvmsg4 clean-obj
