@@ -1,0 +1,117 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: patu
+  namespace: kube-system
+  labels:
+    app: patu
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: patu
+  labels:
+    app: patu
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: patu
+  labels:
+    app: patu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: patu
+subjects:
+- kind: ServiceAccount
+  name: patu
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: patu
+  namespace: kube-system
+  labels:
+    app: patu
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: patu
+  template:
+    metadata:
+      labels:
+        app: patu
+    spec:
+      hostNetwork: true
+      containers:
+      - image: "ghcr.io/redhat-et/patu:latest"
+        imagePullPolicy: Always
+        name: patu
+        args:
+        - /cni/patu
+        - -d
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - make
+              - -C bpf
+              - -k
+              - clean
+        resources: 
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 200m
+            memory: 200Mi
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /sys/fs/cgroup
+            name: sys-fs-cgroup
+          - mountPath: /opt/cni/bin
+            name: host-opt-cni-bin
+          - mountPath: /etc/cni/net.d
+            name: host-etc-cni-net
+          - mountPath: /proc
+            name: host-proc
+          - mountPath: /var/run
+            name: host-var-run
+            mountPropagation: Bidirectional
+      
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      restartPolicy: Always
+      serviceAccount: patu
+      serviceAccountName: patu
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - operator: Exists
+      volumes:
+      - hostPath:
+          path: /sys/fs/cgroup
+        name: sys-fs-cgroup
+      - hostPath:
+          path: /proc
+        name: host-proc
+      - hostPath:
+          path: /opt/cni/bin
+        name: host-opt-cni-bin
+      - hostPath:
+          path: /etc/cni/net.d
+        name: hist-etc-cni-net
+      - hostPath:
+          path: /var/run
+        name: host-var-run
