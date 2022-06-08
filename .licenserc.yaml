@@ -29,3 +29,4 @@ header:
     - 'go.sum'
     - 'go.mod'
     - 'Dockerfile'
+    - '**/*.yaml'
