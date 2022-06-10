@@ -19,15 +19,18 @@ header:
     copyright-owner: Patu
 
   paths-ignore:
-    - '.gitignore'
-    - 'LICENSE'
-    - '**/*.md'
-    - '.github/'
-    - '.vscode/'
-    - 'CODEOWNERS'
-    - 'Makefile'
-    - 'go.sum'
-    - 'go.mod'
-    - 'Dockerfile'
-    - '**/*.yaml'
-    - '.clang-format'
+    - ".gitignore"
+    - "LICENSE"
+    - "**/*.md"
+    - ".github/"
+    - ".vscode/"
+    - "CODEOWNERS"
+    - "Makefile"
+    - "go.sum"
+    - "go.mod"
+    - "Dockerfile"
+    - "**/*.yaml"
+    - ".clang-format"
+    - "**/*.toml"
+    - "**/*.lock"
+    - "**/*.json"

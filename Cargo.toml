@@ -1,0 +1,2 @@
+[workspace]
+members = ["patu", "patu-common", "xtask"]

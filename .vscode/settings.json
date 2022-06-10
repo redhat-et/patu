@@ -23,5 +23,12 @@
         "helpers.h": "c"
     },
     "docker.imageBuildContextPath": ".",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "rust-analyzer.linkedProjects": [
+        "Cargo.toml",
+        "patu-ebpf/Cargo.toml"
+    ],
+    "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow.json": ".github/workflows/*"
+    }
 }

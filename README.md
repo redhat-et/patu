@@ -19,3 +19,56 @@ With most of the existing container networking solutions, the packet from worklo
 This project is an attempt to build a CNI using a new operating system kernel technology named [eBPF](https://ebpf.io/what-is-ebpf) (extended Berkeley Packet Filter) with the goal to enable container networking with the optimum per packet compute cost. eBPF allows users to write kernel programs to intercept networking packets at multiple levels in the operating system networking stack. The high level idea of the CNI is to operate at the socket layer for the local traffic, leverage eBPF [xdp](https://developers.redhat.com/blog/2021/04/01/get-started-with-xdp) for ingress. Packet from the source container will be directly intercepted at the socket layer of the container and forwarded to the destination workload container's socket layer using the eBPF programs. This avoids multiple packet traversal through multiple networking layers, provides better latency and also requires less compute resources as packet doesn’t have to go through multiple layers of encapsulation and decapsulation. The control plane will enable the socket redirection across all the containers deployed within the worker node and will enable/disable socket redirection according to the container lifecycle.
 
 **This work is just incubated, so there are multiple open questions on the design of various CNI features (e.g Ingress, Network Policy), and we will address those as we progress.**
+
+## Using the CNI
+
+There is a CNI plugin called `patu` that is available in this repository.
+To install and use it, you will need at least the `host-local` IPAM plugin installed also.
+These can be obtained from [here](https://github.com/containernetworking/plugins/releases/tag/v1.1.1).
+The plugins should be installed to `/opt/cni/bin`
+
+### Executing Manually
+
+1. `cargo build`
+2. `sudo ip netns create test`
+3. Create a file called `config.json` with the following contents:
+```json
+{"cniVersion":"1.0.0","name":"patu","type":"patu","ipMasq":true,"ipam":{"type":"host-local","routes":[{"dst":"0.0.0.0/0"}],"ranges":[[{"gateway":"10.88.0.1","subnet":"10.88.0.0/16"}]]}}
+```
+4. `cargo build`
+5. `sudo ./target/debug/patu add -n /var/run/netns/test -c foo -i eth0 < config.json`
+
+You can then remove the netns and `patu0` interface to revert to normal.
+
+### Execting using CNI
+
+1. `git clone https://github.com/containernetworking/cni`
+2. `sudo mkdir -p /opt/cni/bin`
+3. `sudo cp ./target/debug/patu /opt/cni/bin`
+4. Create `/etc/cni/net.d/50-patu.conf` with the following contents:
+```json
+{
+  "cniVersion": "1.0.0",
+  "name": "patu",
+  "plugins": [
+    {
+      "type": "patu",
+      "ipMasq": true,
+      "ipam": {
+        "type": "host-local",
+        "routes": [{ "dst": "0.0.0.0/0" }],
+        "ranges": [
+          [
+            {
+              "subnet": "10.88.0.0/16",
+              "gateway": "10.88.0.1"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}
+```
+5. `sudo ip netns create test`
+6. `sudo ./scripts/exec-plugins.sh add ctr12345 /var/run/netns/test`
