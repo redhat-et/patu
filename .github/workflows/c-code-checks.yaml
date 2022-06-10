@@ -1,20 +1,14 @@
-name: Go Code Checks
+name: C Code Checks
 
 on:
   pull_request:
     branches:
       - main
-    paths:
-      - '**.c'
-      - '**.h'
   push:
     branches:
       - main
-    paths:
-      - '**.c'
-      - '**.h'
 
-permission: read-all
+permissions: read-all
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
@@ -23,10 +17,12 @@ concurrency:
 jobs:
   c-code-lint:
     name: C Code Linter
-    runs-on: ubuntu-21.10
+    runs-on: ubuntu-22.04
     steps:
       - name: Install clang-format
-        run: apt-get update && apt-get install -y clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Run C Linter
         run: make c-lint
  

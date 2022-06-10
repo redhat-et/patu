@@ -22,6 +22,11 @@ name: License Check
 
 on: [pull_request, push]
 
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  cancel-in-progress: true
 
 jobs:
   check-license:
