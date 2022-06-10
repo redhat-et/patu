@@ -6,3 +6,6 @@ build-image:
 
 clean-image:
 	./scripts/clean-image.sh
+
+go-lint:
+	golangci-lint run
