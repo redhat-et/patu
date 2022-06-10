@@ -1,0 +1,32 @@
+name: Go Code Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.c'
+      - '**.h'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.c'
+      - '**.h'
+
+permission: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  cancel-in-progress: true
+
+jobs:
+  c-code-lint:
+    name: C Code Linter
+    runs-on: ubuntu-21.10
+    steps:
+      - name: Install clang-format
+        run: apt-get update && apt-get install -y clang-format
+      - name: Run C Linter
+        run: make c-lint
+ 

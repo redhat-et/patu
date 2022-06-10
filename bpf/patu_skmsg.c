@@ -18,11 +18,10 @@ limitations under the License.
 
 #include "include/helpers/helpers.h"
 
-__section("sk_msg") int patu_skmsg(struct sk_msg_md *msg)
-{
-    int pid = bpf_get_current_pid_tgid() >> 32;
-    print_info("sk_msg called by %d", pid);
-    return 1;
+__section("sk_msg") int patu_skmsg(struct sk_msg_md *msg) {
+  int pid = bpf_get_current_pid_tgid() >> 32;
+  print_info("sk_msg called by %d", pid);
+  return 1;
 }
 
 char ____license[] __section("license") = "GPL";

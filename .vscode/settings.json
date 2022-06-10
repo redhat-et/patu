@@ -9,10 +9,13 @@
         "Patu",
         "printk",
         "skmsg",
+        "skops",
+        "sockops",
         "vishnoianil"
     ],
     "files.associations": {
         "helpers.h": "c"
     },
-    "docker.imageBuildContextPath": "."
+    "docker.imageBuildContextPath": ".",
+    "editor.formatOnSave": true
 }
