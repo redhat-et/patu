@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  go-code-lint:
-    name: Go Code Linter
+  go-code-checks:
+    name: Go Code Checks
     runs-on: ubuntu-22.04
     steps:
       - name: Set up Go
@@ -32,4 +32,6 @@ jobs:
         with:
           version: v1.46.2
           skip-cache: true
-  
+      - name: Build Go Code
+        run: make go-build
+

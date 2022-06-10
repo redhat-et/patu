@@ -17,6 +17,9 @@ TARGETS=patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skmsg.o patu_sockop
 
 compile: $(TARGETS)
 
+lint:
+	clang-format --Werror -n ./*.c ./include/helpers/*.h
+
 clean-obj:
 	[ -f patu_connect4.c ] && sudo rm -f $(TARGETS)
 
@@ -59,3 +62,5 @@ unload-sendmsg4:
 load: load-connect4 load-sendmsg4 load-recvmsg4
 attach: attach-connect4 attach-sendmsg4 attach-recvmsg4
 unload: unload-connect4 unload-sendmsg4 unload-recvmsg4 clean-obj
+
+pre-commit-checks: lint compile
