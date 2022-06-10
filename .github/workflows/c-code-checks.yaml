@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  c-code-lint:
-    name: C Code Linter
+  c-code-checks:
+    name: C Code Checks
     runs-on: ubuntu-22.04
     steps:
       - name: Install clang-format
@@ -25,13 +25,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Run C Linter
         run: make -C bpf lint
-  compile-ebpf-progs:
-    runs-on: ubuntu-22.04
-    needs: [c-code-lint]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Compile progs
+      - name: Compile eBPF programs
         run: make -C bpf compile
 
  
