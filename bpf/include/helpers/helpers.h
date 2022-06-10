@@ -22,22 +22,21 @@ limitations under the License.
 #define __section(NAME) __attribute__((section(NAME), used))
 #endif
 
-
 static __u64 (*bpf_get_current_pid_tgid)() = (void *)
     BPF_FUNC_get_current_pid_tgid;
 static void (*bpf_trace_printk)(const char *fmt, int fmt_size,
                                 ...) = (void *)BPF_FUNC_trace_printk;
 
 #undef print_info
-#define print_info(fmt, ...)                                                       \
-    ({                                                                         \
-        char ____fmt[] = fmt;                                     \
-        bpf_trace_printk(____fmt, sizeof(____fmt), ##__VA_ARGS__);             \
-    })
+#define print_info(fmt, ...)                                                   \
+  ({                                                                           \
+    char ____fmt[] = fmt;                                                      \
+    bpf_trace_printk(____fmt, sizeof(____fmt), ##__VA_ARGS__);                 \
+  })
 
 #undef print_dbg
-#define print_dbg(fmt, ...)                                                       \
-    ({                                                                         \
-        char ____fmt[] = "[dbg] "fmt;                                     \
-        bpf_trace_printk(____fmt, sizeof(____fmt), ##__VA_ARGS__);             \
-    })
+#define print_dbg(fmt, ...)                                                    \
+  ({                                                                           \
+    char ____fmt[] = "[dbg] " fmt;                                             \
+    bpf_trace_printk(____fmt, sizeof(____fmt), ##__VA_ARGS__);                 \
+  })

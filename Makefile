@@ -9,3 +9,6 @@ clean-image:
 
 go-lint:
 	golangci-lint run
+
+c-lint:
+	clang-format --Werror -n bpf/*.c bpf/include/helpers/*.h

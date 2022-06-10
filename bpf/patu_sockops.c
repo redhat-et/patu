@@ -18,11 +18,10 @@ limitations under the License.
 
 #include "include/helpers/helpers.h"
 
-__section("sockops") int patu_sockops(struct bpf_sock_ops *skops)
-{
-    int pid = bpf_get_current_pid_tgid() >> 32;
-    print_info("sockops called by %d", pid);
-    return 1;
+__section("sockops") int patu_sockops(struct bpf_sock_ops *skops) {
+  int pid = bpf_get_current_pid_tgid() >> 32;
+  print_info("sockops called by %d", pid);
+  return 1;
 }
 
 char ____license[] __section("license") = "GPL";

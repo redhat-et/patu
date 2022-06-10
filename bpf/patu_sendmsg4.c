@@ -18,11 +18,10 @@ limitations under the License.
 
 #include "include/helpers/helpers.h"
 
-__section("cgroup/sendmsg4") int patu_sendmsg4(struct bpf_sock_addr *ctx)
-{
-    int pid = bpf_get_current_pid_tgid() >> 32;
-    print_info("sendmsg4 called by %d", pid);
-    return 1;
+__section("cgroup/sendmsg4") int patu_sendmsg4(struct bpf_sock_addr *ctx) {
+  int pid = bpf_get_current_pid_tgid() >> 32;
+  print_info("sendmsg4 called by %d", pid);
+  return 1;
 }
 
 char ____license[] __section("license") = "GPL";
