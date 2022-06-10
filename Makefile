@@ -1,3 +1,4 @@
+# Image building related targets
 KERNEL?=5.7 #Build image for default 5.7 kernel.
 
 build-image:
@@ -7,8 +8,16 @@ build-image:
 clean-image:
 	./scripts/clean-image.sh
 
+# Go code related targets
+go-build:
+	go build -ldflags "-s -w" -o ./dist/patu ./cmd/patu/patu.go
+
 go-lint:
 	golangci-lint run
 
-c-lint:
-	clang-format --Werror -n bpf/*.c bpf/include/helpers/*.h
+go-clean:
+	rm -Rf ./dist
+	
+pre-commit-checks: go-lint go-build 
+	make -C bpf pre-commit-checks
+
