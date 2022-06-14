@@ -20,7 +20,10 @@
 ---
 name: License Check
 
-on: [pull_request, push]
+on:
+  pull_request:
+    branches:
+      - main
 
 permissions: read-all
 
