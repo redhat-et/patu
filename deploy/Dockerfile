@@ -35,7 +35,7 @@ RUN cd /linux/tools/bpf/bpftool && \
 
 
 # Generate final image with eBPF program objects and Patu app.
-FROM ubuntu:22.04
+FROM ubuntu:22.04 as cni
 
 WORKDIR /cni
 
