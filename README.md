@@ -1,6 +1,6 @@
 # [Patu](https://en.wikipedia.org/wiki/Patu_digua)
 
-Lightweight Container networking solution for resource constrained compute devices, such as Edge Devices.
+Lightweight networking solution for Container Orchestrators managing container lifecycle on resource constrained compute devices, such as Edge Devices.
 
 ## The Challenge
 
