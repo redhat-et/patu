@@ -1,5 +1,5 @@
 # Image building related targets
-KERNEL?=5.7 #Build image for default 5.7 kernel.
+KERNEL?=5.15 #Build image for default 5.7 kernel.
 
 build-image:
 	export KERNEL=$(KERNEL)
@@ -18,6 +18,6 @@ go-lint:
 go-clean:
 	rm -Rf ./dist
 	
-pre-commit-checks: go-lint go-build 
+pre-commit-checks: go-lint go-build go-clean
 	make -C bpf pre-commit-checks
 
