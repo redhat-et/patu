@@ -25,6 +25,7 @@ COPY bpf bpf
 RUN apt-get update && apt-get install -y git cmake clang make gcc python3 libncurses-dev gawk flex bison openssl \
     libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm
 
+RUN grep cgroup /proc/filesystems
 RUN make -C bpf compile
 
 RUN git clone -b v$kernel https://github.com/torvalds/linux.git --depth 1

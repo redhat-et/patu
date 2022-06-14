@@ -1,9 +1,8 @@
 # Image building related targets
-KERNEL?=5.15 #Build image for default 5.7 kernel.
+KERNEL?=5.15
 
 build-image:
-	export KERNEL=$(KERNEL)
-	./scripts/build-image.sh
+	export KERNEL=$(KERNEL); ./scripts/build-image.sh
 
 clean-image:
 	./scripts/clean-image.sh
