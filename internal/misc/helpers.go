@@ -13,28 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bpf
+package misc
 
 import (
-	"cmd/patu/app/configs"
 	"fmt"
+
+	"github.com/containernetworking/cni/pkg/skel"
 )
 
-func LoadAndAttachBPFProg() error {
-	var err error
-	if err = loadBpfProg(configs.Debug); err != nil {
-		return fmt.Errorf("eBPF program loading failed with : %v", err)
-	}
-
-	if err = attachBpfProg(); err != nil {
-		return fmt.Errorf("eBPF program attach failed with : %v", err)
-	}
-	return nil
-}
-
-func UnloadBpfProg() error {
-	if err := unloadBpfProg(); err != nil {
-		return fmt.Errorf("eBPF program unloading failed with :  %v", err)
-	}
-	return nil
+func PrintCmdArgs (args *skel.CmdArgs ) {
+	fmt.Printf("CMD_ADD: %s - %s - %s - %s - %s - %s", 
+	args.ContainerID, 
+	args.IfName, 
+	args.Netns, 
+	args.Path, 
+	args.Args, 
+	string(args.StdinData))
 }
