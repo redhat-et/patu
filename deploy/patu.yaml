@@ -33,6 +33,28 @@ subjects:
   name: patu
   namespace: kube-system
 ---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: patu-cni-conf
+  namespace: kube-system
+  labels:
+    tier: node
+    app: patu
+data:
+  patu-cni-conf.json: |
+    {
+      "cniVersion": "1.0.0",
+      "name": "patu-cni",
+      "type": "patu",
+      "defaultBridge": "cni0"
+      "ipam": {
+          "type": "host-local",
+          "subnet": "10.200.0.0/16",
+          "gateway": "10.200.0.1"
+      }
+    }
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -51,6 +73,33 @@ spec:
         app: patu
     spec:
       hostNetwork: true
+      initContainers:
+      - name: install-patu-conf
+        image: "ghcr.io/redhat-et/patu:latest"
+        imagePullPolicy: Always
+        command:
+        - cp
+        args:
+        - -f
+        - /etc/patu/patu-cni-conf.json
+        - /etc/cni/net.d/20-patu.conflist
+        volumeMounts:
+          - name: host-etc-cni-net
+            mountPath: /etc/cni/net.d
+          - name: patu-conf
+            mountPath: /etc/patu/
+      - name: install-patu-cni
+        image: "ghcr.io/redhat-et/patu:latest"
+        imagePullPolicy: Always
+        command:
+        - cp
+        args:
+        - -f
+        - /cni/patu
+        - /etc/cni/net.d/patu
+        volumeMounts:
+          - name: host-opt-cni-bin
+            mountPath: /opt/bin/cni
       containers:
       - image: "ghcr.io/redhat-et/patu:latest"
         imagePullPolicy: Always
@@ -69,23 +118,23 @@ spec:
         resources: 
           requests:
             cpu: 100m
-            memory: 100Mi
+            memory: 200Mi
           limits:
-            cpu: 200m
+            cpu: 100m
             memory: 200Mi
         securityContext:
           privileged: true
         volumeMounts:
-          - mountPath: /sys/fs/cgroup
-            name: sys-fs-cgroup
-          - mountPath: /opt/cni/bin
-            name: host-opt-cni-bin
-          - mountPath: /etc/cni/net.d
-            name: host-etc-cni-net
-          - mountPath: /proc
-            name: host-proc
-          - mountPath: /var/run
-            name: host-var-run
+          - name: host-sys-fs-cgroup
+            mountPath: /sys/fs/cgroup
+          - name: host-opt-cni-bin
+            mountPath: /opt/cni/bin
+          - name: host-etc-cni-net
+            mountPath: /etc/cni/net.d  
+          - name: host-proc
+            mountPath: /proc
+          - name: host-var-run
+            mountPath: /var/run
             mountPropagation: Bidirectional
       
       dnsPolicy: ClusterFirst
@@ -100,18 +149,22 @@ spec:
         operator: Exists
       - operator: Exists
       volumes:
-      - hostPath:
+      - name: host-sys-fs-cgroup
+        hostPath:
           path: /sys/fs/cgroup
-        name: sys-fs-cgroup
-      - hostPath:
+      - name: host-proc
+        hostPath:
           path: /proc
-        name: host-proc
-      - hostPath:
+      - name: host-opt-cni-bin
+        hostPath:
           path: /opt/cni/bin
-        name: host-opt-cni-bin
-      - hostPath:
+      - name: host-etc-cni-net
+        hostPath:
           path: /etc/cni/net.d
-        name: hist-etc-cni-net
-      - hostPath:
+      - name: host-var-run
+        hostPath:
           path: /var/run
-        name: host-var-run
+      - name: patu-conf
+        configMap:
+          name: patu-cni-conf
+        

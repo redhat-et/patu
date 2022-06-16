@@ -21,11 +21,17 @@ import (
 	"cmd/patu/app/internal/bpf"
 	"fmt"
 	"os"
+	"os/signal"
 	"runtime"
 	"strings"
+	"syscall"
 
+	"github.com/containernetworking/cni/pkg/skel"
+	"github.com/containernetworking/cni/pkg/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	bv "github.com/containernetworking/plugins/pkg/utils/buildversion"
+
 )
 
 
@@ -34,12 +40,25 @@ var rootCmd = &cobra.Command{
 	Short: "Patu - lightweight CNI for container orchestrators managing edge devices.",
 	Long: `Patu - lightweight CNI for container orchestrators managing edge devices.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := bpf.RunBpfOperator(); err != nil {
+		var err error
+		if err = bpf.LoadAndAttachBPFProg(); err != nil {
 			return fmt.Errorf(err.Error());
 		}
-				return nil
-	},
 
+		pw := NewPodWatcher()
+		
+		//Register the patu plugin, once eBPF programs are loaded.
+		skel.PluginMain(pw.cmdAdd, pw.cmdCheck, pw.cmdDel, version.All, bv.BuildString("patu"))
+
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
+		<-ch
+	
+		if err = bpf.UnloadBpfProg(); err != nil {
+			return fmt.Errorf(err.Error());
+		}
+		return nil
+	},
 }
 
 func Execute() {
