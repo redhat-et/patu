@@ -45,8 +45,7 @@ Same testing was repeated with half the aforementioned resource limit of contain
 4. Bombard with external load (16:50:41 to 16:56:51)
 *Recorded in file toptest3-1s.html and topdata3-1s.txt*
 
-*Observations*
-
+**Observations**
 At times CPU utilisation is pretty close to 100% especially during the scaling phase. The peaks in nmon file are attributed to the microshift process when related with data from the top command. kswapd0 (process concerning virtual memory, swap space) also seems to be consuming a lot of CPU resources- but a later test with swap off mainly has microshift topping the list. Overall the CPU utilisation pattern is pretty jagged, and flanneld process in particular lies in ranges `0.1-0.5` i.e. `1% to 5%` CPU consumption. Memory consumption for flanneld results in quite a flat curve with value ranging in `25MB to 31MB`. Overall memory consumption of the system lies around 2250MB +/-100MB; irrespective of phase of the testing process even though at its peak, ~7150 requests were being made to the service per minute, per thread.
 
 
