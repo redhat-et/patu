@@ -25,7 +25,7 @@ Same testing was repeated with half the aforementioned resource limit of contain
 4. Bombard with external load (15:30:07 to 15:32:05) - Steps 3,4 are exclusive in nature i.e. don't happen simultaneously for the purpose of this testing.
 *Recorded in file toptest1-2s.html and topdata1-2s.txt*
 
-![Alt text](../images/CPU-Test1.png?raw=true "CPU Utilisation Percentages-1")
+![CPU Utilisation Percentages-1](images/CPU-Test1.png?raw=true "CPU Utilisation Percentages-1")
 
 #### Test-2:
 1. Start microshift
@@ -34,7 +34,7 @@ Same testing was repeated with half the aforementioned resource limit of contain
 4. Bombard with external load
 *Recorded in file toptest2-1s.html and topdata2-1s.txt*
 
-![Alt text](../images/CPU-Test1.png?raw=true "CPU Utilisation Percentages-2")
+![CPU Utilisation Percentages-2](images/CPU-Test2.png?raw=true "CPU Utilisation Percentages-2")
 
 #### Test-3:
 1. Trigger recording of statistics with nmon and top (1s gap)
@@ -43,7 +43,7 @@ Same testing was repeated with half the aforementioned resource limit of contain
 4. Bombard with external load (16:50:41 to 16:56:51)
 *Recorded in file toptest3-1s.html and topdata3-1s.txt*
 
-![Alt text](../images/CPU-Test1.png?raw=true "CPU Utilisation Percentages-3")
+![CPU Utilisation Percentages-3](images/CPU-Test3.png?raw=true "CPU Utilisation Percentages-3")
 
 **Observations:**
 
@@ -51,6 +51,11 @@ At times CPU utilisation is pretty close to 100% especially during the scaling p
 
 Disk graphs have been collected as well to have the pattern and peak values of how busy different disks are to have as a reference value for comparison with that of patu CNI; and most peaks range mainly around 75-77% across all the tests, and occasionally touch 100%.
 
+##### Flannel CPU(%)/Memory(MB) consumption
+![Flannel CPU/Memory consumption](images/FlannelData.png?raw=true "Flannel CPU/Memory consumption")
+
+##### Disk Data across tests
+![Disk Data across tests](images/DiskData.png?raw=true "Disk Data across tests")*Disk Data across tests*
 
 ### Additional testing
 Attached excel sheets note the graphical trend of CPU consumption, peaks of memory consumption of each of the pods that microshift uses measured using metric-server of kubernetes which will serve as a base for comparison when microshift will be deployed with patu as its CNI. These measurements has been done on container basis by getting their container Ids vis `crictl`, and experimenting with how the graphs differ when load is bombarded from external/ internal sources. 
