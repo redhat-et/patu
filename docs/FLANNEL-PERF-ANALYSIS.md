@@ -51,11 +51,12 @@ At times CPU utilisation is pretty close to 100% especially during the scaling p
 
 Disk graphs have been collected as well to have the pattern and peak values of how busy different disks are to have as a reference value for comparison with that of patu CNI; and most peaks range mainly around 75-77% across all the tests, and occasionally touch 100%.
 
-##### Flannel CPU(%)/Memory(MB) consumption
+##### Flannel CPU(%)/Memory(MB) consumption trend
+###### (This pattern was observed using various tests- please refer files in google drive[links below] for further details.)
 ![Flannel CPU/Memory consumption](images/FlannelData.png?raw=true "Flannel CPU/Memory consumption")
 
 ##### Disk Data across tests
-![Disk Data across tests](images/DiskData.png?raw=true "Disk Data across tests")*Disk Data across tests*
+![Disk Data across tests](images/DiskData.png?raw=true "Disk Data across tests")
 
 ### Additional testing
 Attached excel sheets note the graphical trend of CPU consumption, peaks of memory consumption of each of the pods that microshift uses measured using metric-server of kubernetes which will serve as a base for comparison when microshift will be deployed with patu as its CNI. These measurements has been done on container basis by getting their container Ids vis `crictl`, and experimenting with how the graphs differ when load is bombarded from external/ internal sources. 
