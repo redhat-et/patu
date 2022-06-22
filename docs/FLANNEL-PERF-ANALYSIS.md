@@ -21,9 +21,11 @@ Same testing was repeated with half the aforementioned resource limit of contain
 #### Test-1:
 1. Trigger recording of statistics with nmon and top (2s gap)
 2. Start microshift
-3. Scale upto 28 replicas, up-down repeatedly (around 12 times)
-4. Bombard with external load (15:30:07 to 15:32:05)
+3. Scale upto 28 replicas, up-down repeatedly (around 12 times). Post this scaling phase- nginx pods are at their max count in terms of resources of the server.
+4. Bombard with external load (15:30:07 to 15:32:05) - Steps 3,4 are exclusive in nature i.e. don't happen simultaneously for the purpose of this testing.
 *Recorded in file toptest1-2s.html and topdata1-2s.txt*
+
+![Alt text](../images/CPU-Test1.png?raw=true "CPU Utilisation Percentages-1")
 
 #### Test-2:
 1. Start microshift
@@ -32,6 +34,8 @@ Same testing was repeated with half the aforementioned resource limit of contain
 4. Bombard with external load
 *Recorded in file toptest2-1s.html and topdata2-1s.txt*
 
+![Alt text](../images/CPU-Test1.png?raw=true "CPU Utilisation Percentages-2")
+
 #### Test-3:
 1. Trigger recording of statistics with nmon and top (1s gap)
 2. Start microshift
@@ -39,15 +43,19 @@ Same testing was repeated with half the aforementioned resource limit of contain
 4. Bombard with external load (16:50:41 to 16:56:51)
 *Recorded in file toptest3-1s.html and topdata3-1s.txt*
 
+![Alt text](../images/CPU-Test1.png?raw=true "CPU Utilisation Percentages-3")
+
 **Observations:**
 
-At times CPU utilisation is pretty close to 100% especially during the scaling phase. The peaks in nmon file are attributed to the microshift process when related with data from the top command. kswapd0 (process concerning virtual memory, swap space) also seems to be consuming a lot of CPU resources- but a later test with swap off mainly has microshift topping the list. Overall the CPU utilisation pattern is pretty jagged, and flanneld process in particular lies in ranges `0.1-0.5` i.e. `1% to 5%` CPU consumption. Memory consumption for flanneld results in quite a flat curve with value ranging in `25MB to 31MB`. Overall memory consumption of the system lies around 2250MB +/-100MB; irrespective of phase of the testing process even though at its peak, ~7150 requests were being made to the service per minute, per thread.
+At times CPU utilisation is pretty close to 100% especially during the scaling phase. The peaks in nmon file are attributed to the microshift process when related with data from the top command. kswapd0 (process concerning virtual memory, swap space) also seems to be consuming a lot of CPU resources- A later test with swap off at start of test also didn't eliminate its usage. Overall the CPU utilisation pattern is pretty jagged, and flanneld process in particular lies in ranges `0.1-0.5` i.e. `1% to 5%` CPU consumption. Memory consumption for flanneld results in quite a flat curve with value ranging in `25MB to 31MB`. Overall memory consumption of the system lies around 2250MB +/-100MB; irrespective of phase of the testing process even though at its peak, ~7150 requests were being made to the service per minute, per thread.
+
+Disk graphs have been collected as well to have the pattern and peak values of how busy different disks are to have as a reference value for comparison with that of patu CNI; and most peaks range mainly around 75-77% across all the tests, and occasionally touch 100%.
 
 
 ### Additional testing
 Attached excel sheets note the graphical trend of CPU consumption, peaks of memory consumption of each of the pods that microshift uses measured using metric-server of kubernetes which will serve as a base for comparison when microshift will be deployed with patu as its CNI. These measurements has been done on container basis by getting their container Ids vis `crictl`, and experimenting with how the graphs differ when load is bombarded from external/ internal sources. 
 
-*Files:*
-
+*Files in Google Drive:*
+https://drive.google.com/drive/folders/1QeSnN-l-5hPep_eZpZFvU5X7G2ZhK8vZ?usp=sharing
 https://docs.google.com/spreadsheets/d/10GZAe4TfW93xL6aEpcxnX-73I7YGfww5U05Go9HcEds/edit?usp=sharing
 https://docs.google.com/spreadsheets/d/1Pj6M__fh_cn7hII6WEDY-iW4l5suJTs-w42czmrm5YU/edit?usp=sharing 
