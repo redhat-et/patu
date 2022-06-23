@@ -18,9 +18,8 @@ limitations under the License.
 #include "include/helpers/helpers.h"
 
 __section("cgroup/connect4") int patu_connect4(struct bpf_sock_addr *ctx) {
-  int pid = bpf_get_current_pid_tgid() >> 32;
-
-  print_info("Connect4 called by %d", pid);
+  int pid = get_current_pid_tgid() >> 32;
+  logMetadata("connect4", pid, ctx);
   return 1;
 }
 
