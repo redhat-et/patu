@@ -17,11 +17,63 @@ limitations under the License.
 #include <linux/bpf.h>
 
 #include "include/helpers/helpers.h"
+#include "include/helpers/maps.h"
+
+static inline void logSockopsMetadata(int pid, struct bpf_sock_ops *ctx) {
+  print_info("sockops called by %d", pid);
+  print_info("sockops pid: %d src-ip : %s,  src-port: %d", pid, ctx->local_ip4,
+             bpf_htons(ctx->local_port));
+  print_info("sockops pid: %d dest-ip: %s, dest-port: %d", pid, ctx->remote_ip4,
+             bpf_htons(ctx->remote_port));
+}
+
+static inline void extract_socket_key_v4(struct bpf_sock_ops *sockops,
+                                         struct socket_key *sockkey) {
+
+  sockkey->src_ip = sockops->local_ip4;
+  sockkey->src_port = bpf_htons(sockops->local_port);
+  sockkey->dst_ip = sockops->remote_ip4;
+  sockkey->dst_port = sockops->remote_port >> 16;
+}
+
+static inline int process_sockops_ipv4(struct bpf_sock_ops *skops) {
+
+  struct socket_key sockkey = {};
+  extract_socket_key_v4(skops, &sockkey);
+  int ret = sock_hash_update(skops, &sockops_redir_map, &sockkey, BPF_NOEXIST);
+  if (ret != 0) {
+    print_info("ERROR: failed to updated sock hash map, ret: %d\n", ret);
+  } else {
+    print_info(
+        "Socket key is added successfully. ipv4 op = %d, port %d --> %d\n",
+        skops->op, skops->local_port, bpf_htonl(skops->remote_port));
+  }
+
+  return ret;
+}
 
 __section("sockops") int patu_sockops(struct bpf_sock_ops *skops) {
-  int pid = bpf_get_current_pid_tgid() >> 32;
-  print_info("sockops called by %d", pid);
-  return 1;
+  int pid = get_current_pid_tgid() >> 32;
+  logSockopsMetadata(pid, skops);
+
+  __u32 family, operator;
+  family = skops->family;
+  operator= skops->op;
+
+  switch (operator) {
+  case BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB:
+  case BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB:
+    if (family == 2) { // AFI_NET,refer socket.h
+      if (process_sockops_ipv4(skops))
+        return 1;
+      else
+        return 0;
+    }
+    break;
+  default:
+    break;
+  }
+  return 0;
 }
 
 char ____license[] __section("license") = "GPL";

@@ -148,6 +148,7 @@ func getDefaultBridge(n *NetConf) (*netlink.Bridge, *current.Interface, error) {
 }
 
 func (pw *PodWatcher) cmdAdd(args *skel.CmdArgs) error {
+	fmt.Printf("CMD_ADD : %v", args)
 	var success bool = false
 
 	n, cniVersion, err := loadNetConf(args.StdinData, args.Args)
@@ -279,6 +280,7 @@ func (pw *PodWatcher) cmdAdd(args *skel.CmdArgs) error {
 }
 
 func (pw *PodWatcher) cmdDel(args *skel.CmdArgs) error {
+	fmt.Printf("CMD_DEL : %v", args)
 	n, _, err := loadNetConf(args.StdinData, args.Args)
 	if err != nil {
 		return err
@@ -463,6 +465,7 @@ func validateCniContainerInterface(intf current.Interface) (cniBridgeIf, error) 
 }
 
 func (pw *PodWatcher) cmdCheck(args *skel.CmdArgs) error {
+	fmt.Printf("CMD_CHECK : %v", args)
 
 	n, _, err := loadNetConf(args.StdinData, args.Args)
 	if err != nil {

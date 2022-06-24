@@ -10,7 +10,7 @@ ifeq ($(DEBUG),1)
     MACROS:= $(MACROS) -DDEBUG
 endif
 
-TARGETS=patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skmsg.o patu_sockops.o
+TARGETS=patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skskb.o patu_sockops.o
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(MACROS) -c $< -o $@
@@ -29,6 +29,16 @@ check-cgroup2:
 		$(error Please ensure that cgroup2 is enabled.)
 	endif
 
+# Maps related targets
+load-sockops-redir-map:
+	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/sockops_redir_map type sockhash key 12 value 4 entries 65535 name sockops-redir-map
+unload-sockops-redir-map:
+	sudo rm -f $(PROG_MOUNT_PATH)/sockops_redir_map
+
+load-maps: load-sockops-redir-map
+unload-maps: unload-sockops-redir-map
+
+# Progs related targets
 load-connect4: check-cgroup2
 	sudo bpftool prog load patu_connect4.o $(PROG_MOUNT_PATH)/connect4
 
@@ -59,8 +69,35 @@ unload-sendmsg4:
 	sudo bpftool cgroup detach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
 	sudo rm $(PROG_MOUNT_PATH)/sendmsg4
 
-load: load-connect4 load-sendmsg4 load-recvmsg4
-attach: attach-connect4 attach-sendmsg4 attach-recvmsg4
-unload: unload-connect4 unload-sendmsg4 unload-recvmsg4 clean-obj
+load-sockops: load-sockops-redir-map
+	sudo bpftool -m prog load patu_sockops.o $(PROG_MOUNT_PATH)/sockops \
+		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+
+attach-sockops:
+	sudo bpftool cgroup attach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
+
+unload-sockops:
+	sudo bpftool cgroup detach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
+	sudo rm -rf $(PROG_MOUNT_PATH)/sockops
+
+load-sk-skb: load-sockops-redir-map
+	sudo bpftool -m prog load patu_skskb.o $(PROG_MOUNT_PATH)/skskb \
+		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+
+attach-sk-skb:
+	sudo bpftool prog attach pinned $(PROG_MOUNT_PATH)/skskb msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+
+unload-sk-skb:
+	sudo bpftool prog detach pinned $(PROG_MOUNT_PATH)/skskb msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+	sudo rm $(PROG_MOUNT_PATH)/skskb
+
+
+load-prog: load-connect4 load-sendmsg4 load-recvmsg4 load-sockops
+attach-prog: attach-connect4 attach-sendmsg4 attach-recvmsg4 attach-sockops
+unload-prog: unload-connect4 unload-sendmsg4 unload-recvmsg4 unload-sockops
+
+load: load-maps load-prog
+attach: attach-maps
+unload: unload-prog unload-maps clean-obj
 
 pre-commit-checks: lint compile
