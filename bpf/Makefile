@@ -31,7 +31,7 @@ check-cgroup2:
 
 # Maps related targets
 load-sockops-redir-map:
-	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/sockops_redir_map type sockhash key 12 value 4 entries 65535 name sockops-redir-map
+	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/sockops_redir_map type sockhash key 12 value 4 entries 65535 name sockops_redir_map
 unload-sockops-redir-map:
 	sudo rm -f $(PROG_MOUNT_PATH)/sockops_redir_map
 
