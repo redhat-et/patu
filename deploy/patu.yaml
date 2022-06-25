@@ -96,10 +96,10 @@ spec:
         args:
         - -f
         - /cni/patu
-        - /etc/cni/net.d/patu
+        - /opt/cni/bin/patu
         volumeMounts:
           - name: host-opt-cni-bin
-            mountPath: /opt/bin/cni
+            mountPath: /opt/cni/bin/
       containers:
       - image: "ghcr.io/redhat-et/patu:latest"
         imagePullPolicy: Always
