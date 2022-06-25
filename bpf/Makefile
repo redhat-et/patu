@@ -23,7 +23,7 @@ lint:
 clean-obj:
 	[ -f patu_connect4.c ] && sudo rm -f $(TARGETS)
 
-CGROUP2_PATH ?= $(shell mount | grep cgroup2 | awk '{print $$3}' | grep -v "^/host" | head -n 1)
+CGROUP2_PATH ?= $(shell cat /proc/filesystems| grep cgroup2)
 ifeq ($(CGROUP2_PATH),)
 $(error Please ensure that cgroup2 is enabled.)
 endif
