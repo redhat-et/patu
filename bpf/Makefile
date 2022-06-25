@@ -23,12 +23,11 @@ lint:
 clean-obj:
 	[ -f patu_connect4.c ] && sudo rm -f $(TARGETS)
 
-check-cgroup2:
-	CGROUP2_PATH ?= $(shell mount | grep cgroup2 | awk '{print $$3}' | grep -v "^/host" | head -n 1)
-	ifeq ($(CGROUP2_PATH),)
-		$(error Please ensure that cgroup2 is enabled.)
-	endif
-
+CGROUP2_PATH ?= $(shell mount | grep cgroup2 | awk '{print $$3}' | grep -v "^/host" | head -n 1)
+ifeq ($(CGROUP2_PATH),)
+$(error Please ensure that cgroup2 is enabled.)
+endif
+	
 # Maps related targets
 load-sockops-redir-map:
 	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/sockops_redir_map type sockhash key 12 value 4 entries 65535 name sockops_redir_map
@@ -39,7 +38,7 @@ load-maps: load-sockops-redir-map
 unload-maps: unload-sockops-redir-map
 
 # Progs related targets
-load-connect4: check-cgroup2
+load-connect4:
 	sudo bpftool prog load patu_connect4.o $(PROG_MOUNT_PATH)/connect4
 
 attach-connect4: 
@@ -49,7 +48,7 @@ unload-connect4:
 	sudo bpftool cgroup detach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
 	sudo rm $(PROG_MOUNT_PATH)/connect4
 
-load-recvmsg4: check-cgroup2
+load-recvmsg4:
 	sudo bpftool prog load patu_recvmsg4.o $(PROG_MOUNT_PATH)/recvmsg4
 
 attach-recvmsg4: 
@@ -59,7 +58,7 @@ unload-recvmsg4:
 	sudo bpftool cgroup detach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
 	sudo rm $(PROG_MOUNT_PATH)/recvmsg4
 
-load-sendmsg4: check-cgroup2
+load-sendmsg4:
 	sudo bpftool prog load patu_sendmsg4.o $(PROG_MOUNT_PATH)/sendmsg4
 
 attach-sendmsg4: 
