@@ -20,6 +20,13 @@ import (
 	"fmt"
 )
 
+func CompileEbpfProg() error {
+	if err := compileEbpfProg(configs.Debug); err != nil {
+		return fmt.Errorf("eBPF program compilation failed with : %v", err)
+	}
+	return nil
+}
+
 func LoadAndAttachBPFProg() error {
 	var err error
 	if err = loadBpfProg(configs.Debug); err != nil {
