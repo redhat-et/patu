@@ -26,13 +26,15 @@ RUN apt-get update && apt-get install -y git cmake clang make gcc python3 libncu
     libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm
 
 RUN grep cgroup /proc/filesystems
-RUN make -C bpf compile
+RUN uname -a
+RUN clang --version
+
+#RUN make -C bpf compile
 
 RUN git clone -b v$kernel https://github.com/torvalds/linux.git --depth 1
 
 RUN cd /linux/tools/bpf/bpftool && \
-    make && make install    
-
+    make && make install  
 
 # Generate final image with eBPF program objects and Patu app.
 FROM ubuntu:22.04 as cni
@@ -43,6 +45,6 @@ RUN mkdir bpf
 COPY --from=ebpf bpf bpf
 COPY --from=ebpf /usr/local/sbin/bpftool /usr/local/sbin/bpftool
 COPY --from=patu /patu/dist/patu patu
-RUN uname -r && apt-get update && apt-get install --no-install-recommends -y make sudo libelf-dev && apt-get autoremove -y && apt-get clean -y
+RUN uname -r && apt-get update && apt-get install --no-install-recommends -y make sudo libelf-dev clang && apt-get autoremove -y && apt-get clean -y
 
 CMD /cni/patu
