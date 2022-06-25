@@ -39,52 +39,52 @@ unload-maps: unload-sockops-redir-map
 
 # Progs related targets
 load-connect4:
-	sudo bpftool prog load patu_connect4.o $(PROG_MOUNT_PATH)/connect4
+	sudo bpftool -m -p -d prog load patu_connect4.o $(PROG_MOUNT_PATH)/connect4
 
 attach-connect4: 
-	sudo bpftool cgroup attach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
+	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
 
 unload-connect4:
 	sudo bpftool cgroup detach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
 	sudo rm $(PROG_MOUNT_PATH)/connect4
 
 load-recvmsg4:
-	sudo bpftool prog load patu_recvmsg4.o $(PROG_MOUNT_PATH)/recvmsg4
+	sudo bpftool -m -p -d prog load patu_recvmsg4.o $(PROG_MOUNT_PATH)/recvmsg4
 
 attach-recvmsg4: 
-	sudo bpftool cgroup attach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
+	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
 
 unload-recvmsg4:
 	sudo bpftool cgroup detach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
 	sudo rm $(PROG_MOUNT_PATH)/recvmsg4
 
 load-sendmsg4:
-	sudo bpftool prog load patu_sendmsg4.o $(PROG_MOUNT_PATH)/sendmsg4
+	sudo bpftool -m -p -d prog load patu_sendmsg4.o $(PROG_MOUNT_PATH)/sendmsg4
 
 attach-sendmsg4: 
-	sudo bpftool cgroup attach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
+	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
 
 unload-sendmsg4:
 	sudo bpftool cgroup detach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
 	sudo rm $(PROG_MOUNT_PATH)/sendmsg4
 
 load-sockops: load-sockops-redir-map
-	sudo bpftool -m prog load patu_sockops.o $(PROG_MOUNT_PATH)/sockops \
+	sudo bpftool -m -p -d prog load patu_sockops.o $(PROG_MOUNT_PATH)/sockops \
 		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
 
 attach-sockops:
-	sudo bpftool cgroup attach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
+	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
 
 unload-sockops:
 	sudo bpftool cgroup detach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
 	sudo rm -rf $(PROG_MOUNT_PATH)/sockops
 
 load-sk-skb: load-sockops-redir-map
-	sudo bpftool -m prog load patu_skskb.o $(PROG_MOUNT_PATH)/skskb \
+	sudo bpftool -m -p -d prog load patu_skskb.o $(PROG_MOUNT_PATH)/skskb \
 		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
 
 attach-sk-skb:
-	sudo bpftool prog attach pinned $(PROG_MOUNT_PATH)/skskb msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+	sudo bpftool -m -p -d prog attach pinned $(PROG_MOUNT_PATH)/skskb msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
 
 unload-sk-skb:
 	sudo bpftool prog detach pinned $(PROG_MOUNT_PATH)/skskb msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
