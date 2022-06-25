@@ -41,6 +41,12 @@ var rootCmd = &cobra.Command{
 	Long: `Patu - lightweight CNI for container orchestrators managing edge devices.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var err error
+		if configs.Compile {
+			if err = bpf.CompileEbpfProg(); err != nil {
+				return fmt.Errorf(err.Error());
+			}	
+		}
+
 		if err = bpf.LoadAndAttachBPFProg(); err != nil {
 			return fmt.Errorf(err.Error());
 		}
@@ -88,4 +94,5 @@ func init() {
 
 	//Flags supported by patu app.
 	rootCmd.PersistentFlags().BoolVarP(&configs.Debug, "debug", "d", false, "Enable/Disable debug mode")
+	rootCmd.PersistentFlags().BoolVarP(&configs.Compile, "compile", "c", false, "Enable/Disable eBPF program compilation")
 }

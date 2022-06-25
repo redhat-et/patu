@@ -17,4 +17,5 @@ package configs
 
 var (
 	Debug		= false
+	Compile 	= false
 )
