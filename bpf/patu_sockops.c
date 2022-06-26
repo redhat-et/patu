@@ -19,12 +19,11 @@ limitations under the License.
 #include "include/helpers/helpers.h"
 #include "include/helpers/maps.h"
 
-static inline void logSockopsMetadata(int pid, struct bpf_sock_ops *ctx) {
-  print_info("sockops called by %d", pid);
-  print_info("sockops pid: %d src-ip : %s,  src-port: %d", pid, ctx->local_ip4,
+static inline void logSockopsMetadata(struct bpf_sock_ops *ctx) {
+  print_info("sockops src-ip : >>%X<<  src-port: %d", bpf_htonl(ctx->local_ip4),
              bpf_htons(ctx->local_port));
-  print_info("sockops pid: %d dest-ip: %s, dest-port: %d", pid, ctx->remote_ip4,
-             bpf_htons(ctx->remote_port));
+  print_info("sockops dest-ip: >>%X<< dest-port: %d",
+             bpf_htonl(ctx->remote_ip4), bpf_htons(ctx->remote_port));
 }
 
 static inline void extract_socket_key_v4(struct bpf_sock_ops *sockops,
@@ -53,8 +52,7 @@ static inline int process_sockops_ipv4(struct bpf_sock_ops *skops) {
 }
 
 __section("sockops") int patu_sockops(struct bpf_sock_ops *skops) {
-  int pid = get_current_pid_tgid() >> 32;
-  logSockopsMetadata(pid, skops);
+  logSockopsMetadata(skops);
 
   __u32 family, operator;
   family = skops->family;

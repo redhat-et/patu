@@ -69,14 +69,9 @@ struct bpf_map {
 };
 
 static __u64 BPF_FUNC(get_current_pid_tgid);
+static __u64 BPF_FUNC(get_current_uid_gid);
 static void BPF_FUNC(trace_printk, const char *fmt, int fmt_size, ...);
 static int BPF_FUNC(sock_hash_update, struct bpf_sock_ops *skops,
                     struct bpf_map *map, void *key, __u64 flags);
 static long BPF_FUNC(sk_redirect_hash, struct __sk_buff *skb,
                      struct bpf_map *map, void *key, __u64 flag);
-
-void logMetadata(char *prog, int pid, struct bpf_sock_addr *ctx) {
-  print_info("%s called by %d", prog, pid);
-  print_info("%s, ip : %s,  port %s", prog, ctx->user_ip4,
-             bpf_htons(ctx->user_port));
-}

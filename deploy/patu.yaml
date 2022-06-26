@@ -107,7 +107,6 @@ spec:
         args:
         - /cni/patu
         - -d
-        - -c
         lifecycle:
           preStop:
             exec:

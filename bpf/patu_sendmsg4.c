@@ -20,7 +20,9 @@ limitations under the License.
 
 __section("cgroup/sendmsg4") int patu_sendmsg4(struct bpf_sock_addr *ctx) {
   int pid = get_current_pid_tgid() >> 32;
-  logMetadata("sendmsg4", pid, ctx);
+  print_info("sendmsg4 is called by %d", pid);
+  print_info("sendmsg4 ip : >>%X<<  port %d", bpf_htonl(ctx->user_ip4),
+             bpf_htons(ctx->user_port));
   return 1;
 }
 

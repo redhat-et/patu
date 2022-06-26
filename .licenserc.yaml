@@ -26,6 +26,8 @@ header:
     - '.vscode/'
     - 'CODEOWNERS'
     - 'Makefile'
+    - 'Makefile.compile'
+    - 'Makefile.load'
     - 'go.sum'
     - 'go.mod'
     - 'Dockerfile'
