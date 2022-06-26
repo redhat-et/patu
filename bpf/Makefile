@@ -1,27 +1,18 @@
-
-CC=clang
-CFLAGS=-O2 -g  -Wall -target bpf -I/usr/include/$(shell uname -m)-linux-gnu
+# This is top level makefile. Compile and load related targets are present in their 
+# separate makefile. Reason for separation is to ensure that compiling doesn't fail
+# while building the image through github workers and it don't have cgroup enabled.
+# cgroup2 enable check is required for eBPF prog loading, and we don't load these
+# object while building the image.
 PROG_MOUNT_PATH=/sys/fs/bpf
 
-MACROS:=
-DEBUG ?=
-
-ifeq ($(DEBUG),1)
-    MACROS:= $(MACROS) -DDEBUG
-endif
-
-TARGETS=patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skskb.o patu_sockops.o
-
-%.o: %.c
-	$(CC) $(CFLAGS) $(MACROS) -c $< -o $@
-
-compile: $(TARGETS)
+compile:
+	make -f Makefile.compile compile
 
 lint:
-	clang-format --Werror -n ./*.c ./include/helpers/*.h
+	make -f Makefile.compile lint
 
 clean-obj:
-	[ -f patu_connect4.c ] && sudo rm -f $(TARGETS)
+	make -f Makefile.compile clean-obj
 
 CGROUP2_PATH ?= $(shell cat /proc/filesystems| grep cgroup2)
 ifeq ($(CGROUP2_PATH),)
@@ -30,73 +21,68 @@ endif
 	
 # Maps related targets
 load-sockops-redir-map:
-	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/sockops_redir_map type sockhash key 12 value 4 entries 65535 name sockops_redir_map
+	make -f Makefile.load load-sockops-redir-map
 unload-sockops-redir-map:
-	sudo rm -f $(PROG_MOUNT_PATH)/sockops_redir_map
+	make -f Makefile.load unload-sockops-redir-map
 
 load-maps: load-sockops-redir-map
 unload-maps: unload-sockops-redir-map
 
-# Progs related targets
+# Passthrough targets.
 load-connect4:
-	sudo bpftool -m -p -d prog load patu_connect4.o $(PROG_MOUNT_PATH)/connect4
-
+	make -f Makefile.load load-connect4
 attach-connect4: 
-	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
-
+	make -f Makefile.load attach-connect4
+detach-connect4:
+	make -f Makefile.load detach-connect4
 unload-connect4:
-	sudo bpftool cgroup detach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
-	sudo rm $(PROG_MOUNT_PATH)/connect4
+	make -f Makefile.load unload-connect4
 
 load-recvmsg4:
-	sudo bpftool -m -p -d prog load patu_recvmsg4.o $(PROG_MOUNT_PATH)/recvmsg4
-
+	make -f Makefile.load load-recvmsg4
 attach-recvmsg4: 
-	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
-
+	make -f Makefile.load attach-recvmsg4
+detach-recvmsg4: 
+	make -f Makefile.load detach-recvmsg4
 unload-recvmsg4:
-	sudo bpftool cgroup detach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
-	sudo rm $(PROG_MOUNT_PATH)/recvmsg4
+	make -f Makefile.load unload-recvmsg4
 
 load-sendmsg4:
-	sudo bpftool -m -p -d prog load patu_sendmsg4.o $(PROG_MOUNT_PATH)/sendmsg4
-
+	make -f Makefile.load load-sendmsg4
 attach-sendmsg4: 
-	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
-
+	make -f Makefile.load attach-sendmsg4
+detach-sendmsg4: 
+	make -f Makefile.load detach-sendmsg4
 unload-sendmsg4:
-	sudo bpftool cgroup detach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
-	sudo rm $(PROG_MOUNT_PATH)/sendmsg4
+	make -f Makefile.load unload-sendmsg4
 
-load-sockops: load-sockops-redir-map
-	sudo bpftool -m -p -d prog load patu_sockops.o $(PROG_MOUNT_PATH)/sockops \
-		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
-
+load-sockops:
+	make -f Makefile.load load-sockops
 attach-sockops:
-	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
-
+	make -f Makefile.load attach-sockops
+detach-sockops:
+	make -f Makefile.load detach-sockops
 unload-sockops:
-	sudo bpftool cgroup detach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
-	sudo rm -rf $(PROG_MOUNT_PATH)/sockops
+	make -f Makefile.load unload-sockops
 
-load-sk-skb: load-sockops-redir-map
-	sudo bpftool -m -p -d prog load patu_skskb.o $(PROG_MOUNT_PATH)/skskb \
-		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
-
+load-sk-skb:
+	make -f Makefile.load load-sk-skb
 attach-sk-skb:
-	sudo bpftool -m -p -d prog attach pinned $(PROG_MOUNT_PATH)/skskb msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
-
+	make -f Makefile.load attach-sk-skb
+detach-sk-skb:
+	make -f Makefile.load detach-sk-skb
 unload-sk-skb:
-	sudo bpftool prog detach pinned $(PROG_MOUNT_PATH)/skskb msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
-	sudo rm $(PROG_MOUNT_PATH)/skskb
+	make -f Makefile.load unload-sk-skb
 
-
-load-prog: load-connect4 load-sendmsg4 load-recvmsg4 load-sockops
-attach-prog: attach-connect4 attach-sendmsg4 attach-recvmsg4 attach-sockops
-unload-prog: unload-connect4 unload-sendmsg4 unload-recvmsg4 unload-sockops
+load-prog: load-connect4 load-sendmsg4 load-recvmsg4 load-sockops load-sk-skb
+attach-prog: attach-connect4 attach-sendmsg4 attach-recvmsg4 attach-sockops attach-sk-skb
+detach-prog: detach-connect4 detach-sendmsg4 detach-recvmsg4 detach-sockops detach-sk-skb
+unload-prog: unload-connect4 unload-sendmsg4 unload-recvmsg4 unload-sockops unload-sk-skb
 
 load: load-maps load-prog
-attach: attach-maps
-unload: unload-prog unload-maps clean-obj
+attach: attach-prog
+detach: detach-prog
+unload: unload-prog unload-maps 
+	make -f Makefile.compile clean-obj
 
 pre-commit-checks: lint compile

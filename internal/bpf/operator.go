@@ -40,7 +40,11 @@ func LoadAndAttachBPFProg() error {
 }
 
 func UnloadBpfProg() error {
-	if err := unloadBpfProg(); err != nil {
+	var err error
+	if err = detachBpfProg(); err != nil {
+		return fmt.Errorf("eBPF program detach failed with : %v", err)
+	}
+	if err = unloadBpfProg(); err != nil {
 		return fmt.Errorf("eBPF program unloading failed with :  %v", err)
 	}
 	return nil

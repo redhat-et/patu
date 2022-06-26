@@ -86,6 +86,19 @@ func attachBpfProg() error {
 	return nil
 }
 
+func detachBpfProg() error {
+	cmd := exec.Command("make", "detach")
+	cmd.Dir = progPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
+		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
+	}
+	fmt.Printf("eBPF programs detached successfully.")
+	return nil
+}
+
 func unloadBpfProg() error {
 	cmd := exec.Command("make", "unload")
 	cmd.Dir = progPath
