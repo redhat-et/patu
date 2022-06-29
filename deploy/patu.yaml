@@ -45,13 +45,16 @@ data:
   patu-cni-conf.json: |
     {
       "cniVersion": "1.0.0",
-      "name": "patu-cni",
-      "type": "patu",
-      "defaultBridge": "cni0"
-      "ipam": {
-          "type": "host-local",
-          "subnet": "10.200.0.0/16",
-          "gateway": "10.200.0.1"
+      "name": "patu-network",
+      "plugins": [
+        {
+          "type": "patu",
+          "defaultBridge": "cni0"
+          "ipam": {
+            "type": "host-local",
+            "subnet": "10.200.0.0/16",
+            "gateway": "10.200.0.1"
+          }
       }
     }
 ---
