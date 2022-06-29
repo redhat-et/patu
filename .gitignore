@@ -53,4 +53,4 @@ dkms.conf
 # vscode config files
 .vscode/dryrun.log
 .vscode/targets.log
-.vscode/configurationCache.log
+.vscode/git 
