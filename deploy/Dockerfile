@@ -30,7 +30,7 @@ RUN uname -a
 
 RUN make -C bpf compile
 
-RUN git clone -b v5.18 https://github.com/torvalds/linux.git --depth 1
+RUN git clone -b v${kernel} https://github.com/torvalds/linux.git --depth 1
 
 RUN cd /linux/tools/bpf/bpftool && \
     make && make install  
