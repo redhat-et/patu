@@ -36,17 +36,16 @@ import (
 )
 
 type PodWatcher struct {
-
 }
 
 const defaultBrName = "cni0"
 
 type NetConf struct {
 	types.NetConf
-	BrName       string `json:"defaultBridge"`
-	MTU          int    `json:"mtu"`
-	EnableDad    bool   `json:"enabledad,omitempty"`
-	mac string
+	BrName    string `json:"defaultBridge"`
+	MTU       int    `json:"mtu"`
+	EnableDad bool   `json:"enabledad,omitempty"`
+	mac       string
 }
 
 type BridgeArgs struct {
@@ -59,7 +58,7 @@ type MacEnvArgs struct {
 	MAC types.UnmarshallableString `json:"mac,omitempty"`
 }
 
-func NewPodWatcher() (*PodWatcher) {
+func NewPodWatcher() *PodWatcher {
 	return &PodWatcher{}
 }
 
@@ -132,7 +131,7 @@ func setupVeth(netns ns.NetNS, br *netlink.Bridge, ifName string, mtu int, mac s
 }
 
 func getDefaultBridge(n *NetConf) (*netlink.Bridge, *current.Interface, error) {
-	
+
 	br, err := bridgeByName(n.BrName)
 	if err != nil {
 		return nil, nil, err
@@ -328,7 +327,6 @@ func (pw *PodWatcher) cmdDel(args *skel.CmdArgs) error {
 	if err := ipamDel(); err != nil {
 		return err
 	}
-
 	return err
 }
 
