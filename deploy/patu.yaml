@@ -45,15 +45,16 @@ data:
   patu-cni-conf.json: |
     {
       "cniVersion": "1.0.0",
-      "name": "patu-cni",
-      "type": "patu",
-      "defaultBridge": "cni0",
-      "ipMasq": false,
-      "isGateway": true,
-      "ipam": {
-          "type": "host-local",
-          "subnet": "10.200.0.0/16",
-          "gateway": "10.200.0.1"
+      "name": "patu-network",
+      "plugins": [
+        {
+          "type": "patu",
+          "defaultBridge": "cni0"
+          "ipam": {
+            "type": "host-local",
+            "subnet": "10.200.0.0/16",
+            "gateway": "10.200.0.1"
+          }
       }
     }
 ---
@@ -77,7 +78,7 @@ spec:
       hostNetwork: true
       initContainers:
       - name: install-patu-conf
-        image: "docker.io/punakshi/redhat-intern:test2"
+        image: "ghcr.io/redhat-et/patu:latest"
         imagePullPolicy: Always
         command:
         - cp
@@ -91,7 +92,7 @@ spec:
           - name: patu-conf
             mountPath: /etc/patu/
       - name: install-patu-cni
-        image: "docker.io/punakshi/redhat-intern:test2"
+        image: "ghcr.io/redhat-et/patu:latest"
         imagePullPolicy: Always
         command:
         - cp
@@ -103,7 +104,7 @@ spec:
           - name: host-opt-cni-bin
             mountPath: /opt/cni/bin/
       containers:
-      - image: "docker.io/punakshi/redhat-intern:test2"
+      - image: "ghcr.io/redhat-et/patu:latest"
         imagePullPolicy: Always
         name: patu
         args:
