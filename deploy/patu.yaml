@@ -47,7 +47,9 @@ data:
       "cniVersion": "1.0.0",
       "name": "patu-cni",
       "type": "patu",
-      "defaultBridge": "cni0"
+      "defaultBridge": "cni0",
+      "ipMasq": false,
+      "isGateway": true,
       "ipam": {
           "type": "host-local",
           "subnet": "10.200.0.0/16",
@@ -75,7 +77,7 @@ spec:
       hostNetwork: true
       initContainers:
       - name: install-patu-conf
-        image: "ghcr.io/redhat-et/patu:latest"
+        image: "docker.io/punakshi/redhat-intern:test2"
         imagePullPolicy: Always
         command:
         - cp
@@ -89,7 +91,7 @@ spec:
           - name: patu-conf
             mountPath: /etc/patu/
       - name: install-patu-cni
-        image: "ghcr.io/redhat-et/patu:latest"
+        image: "docker.io/punakshi/redhat-intern:test2"
         imagePullPolicy: Always
         command:
         - cp
@@ -101,7 +103,7 @@ spec:
           - name: host-opt-cni-bin
             mountPath: /opt/cni/bin/
       containers:
-      - image: "ghcr.io/redhat-et/patu:latest"
+      - image: "docker.io/punakshi/redhat-intern:test2"
         imagePullPolicy: Always
         name: patu
         args:
@@ -110,11 +112,7 @@ spec:
         lifecycle:
           preStop:
             exec:
-              command:
-              - make
-              - -C bpf
-              - -k
-              - clean
+              command: ["/bin/sh", "-c", "/usr/local/sbin/post-cni.sh"]
         resources: 
           requests:
             cpu: 100m

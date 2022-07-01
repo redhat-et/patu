@@ -23,21 +23,21 @@ import (
 )
 
 const (
-	progPath	= "./bpf"
+	progPath = "./bpf"
 )
 
 func compileEbpfProg(debug bool) error {
 	cmd := exec.Command("make", "compile")
 	cmd.Dir = progPath
 	cmd.Env = os.Environ()
-	
+
 	if debug {
 		cmd.Env = append(cmd.Env, "DEBUG=1")
 	}
-	
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	err := cmd.Run()
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
@@ -53,14 +53,14 @@ func loadBpfProg(debug bool) error {
 	cmd := exec.Command("make", "load")
 	cmd.Dir = progPath
 	cmd.Env = os.Environ()
-	
+
 	if debug {
 		cmd.Env = append(cmd.Env, "DEBUG=1")
 	}
-	
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	err := cmd.Run()
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
@@ -108,6 +108,6 @@ func unloadBpfProg() error {
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
-	fmt.Printf("eBPF programs attached successfully.")
+	fmt.Printf("eBPF programs unloaded successfully.")
 	return nil
 }
