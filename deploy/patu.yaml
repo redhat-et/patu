@@ -113,11 +113,7 @@ spec:
         lifecycle:
           preStop:
             exec:
-              command:
-              - make
-              - -C bpf
-              - -k
-              - clean
+              command: ["/bin/sh", "-c", "/usr/local/sbin/post-cni.sh"]
         resources: 
           requests:
             cpu: 100m

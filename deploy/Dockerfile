@@ -30,7 +30,7 @@ RUN uname -a
 
 RUN make -C bpf compile
 
-RUN git clone -b v$kernel https://github.com/torvalds/linux.git --depth 1
+RUN git clone -b v5.18 https://github.com/torvalds/linux.git --depth 1
 
 RUN cd /linux/tools/bpf/bpftool && \
     make && make install  
@@ -43,6 +43,7 @@ WORKDIR /cni
 RUN mkdir bpf
 COPY --from=ebpf bpf bpf
 COPY --from=ebpf /usr/local/sbin/bpftool /usr/local/sbin/bpftool
+COPY ./scripts/post-cni.sh /usr/local/sbin/
 COPY --from=patu /patu/dist/patu patu
 RUN uname -r && apt-get update && apt-get install --no-install-recommends -y make sudo libelf-dev && apt-get autoremove -y && apt-get clean -y
 
