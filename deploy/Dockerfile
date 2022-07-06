@@ -43,6 +43,7 @@ WORKDIR /cni
 RUN mkdir bpf
 COPY --from=ebpf bpf bpf
 COPY --from=ebpf /usr/local/sbin/bpftool /usr/local/sbin/bpftool
+COPY ./scripts/post-cni.sh /usr/local/sbin/
 COPY --from=patu /patu/dist/patu patu
 RUN uname -r && apt-get update && apt-get install --no-install-recommends -y make sudo libelf-dev && apt-get autoremove -y && apt-get clean -y
 
