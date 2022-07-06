@@ -75,14 +75,14 @@ unload-sk-skb:
 	make -f Makefile.load unload-sk-skb
 
 load-prog: load-connect4 load-sendmsg4 load-recvmsg4 load-sockops load-sk-skb
-attach-prog: attach-connect4 attach-sendmsg4 attach-recvmsg4 attach-sockops attach-sk-skb
-detach-prog: detach-connect4 detach-sendmsg4 detach-recvmsg4 detach-sockops detach-sk-skb
-unload-prog: unload-connect4 unload-sendmsg4 unload-recvmsg4 unload-sockops unload-sk-skb
+attach-prog: attach-sockops attach-sk-skb attach-connect4 attach-sendmsg4 attach-recvmsg4 
+detach-prog: detach-sk-skb detach-sockops  detach-connect4 detach-sendmsg4 detach-recvmsg4 
+unload-prog: unload-sk-skb unload-sockops  unload-connect4 unload-sendmsg4 unload-recvmsg4 
 
 load: load-maps load-prog
 attach: attach-prog
 detach: detach-prog
-unload: unload-prog unload-maps 
+unload: unload-maps unload-prog 
 	make -f Makefile.compile clean-obj
 
 pre-commit-checks: lint compile
