@@ -108,7 +108,7 @@ spec:
         imagePullPolicy: Always
         name: patu
         args:
-        - /cni/patu
+        - /cni/patud
         - -d
         lifecycle:
           preStop:

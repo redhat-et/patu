@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package app
+package main
 
 import (
 	"encoding/json"
@@ -32,35 +32,24 @@ import (
 	"github.com/containernetworking/plugins/pkg/ip"
 	"github.com/containernetworking/plugins/pkg/ipam"
 	"github.com/containernetworking/plugins/pkg/ns"
+	bv "github.com/containernetworking/plugins/pkg/utils/buildversion"
 	"github.com/containernetworking/plugins/pkg/utils/sysctl"
 )
-
-type PodWatcher struct {
-
-}
 
 const defaultBrName = "cni0"
 
 type NetConf struct {
 	types.NetConf
-	BrName       string `json:"defaultBridge"`
-	MTU          int    `json:"mtu"`
-	EnableDad    bool   `json:"enabledad,omitempty"`
-	mac string
-}
-
-type BridgeArgs struct {
-	Mac string `json:"mac,omitempty"`
+	BrName    string `json:"defaultBridge"`
+	MTU       int    `json:"mtu"`
+	EnableDad bool   `json:"enabledad,omitempty"`
+	mac       string
 }
 
 // MacEnvArgs represents CNI_ARGS
 type MacEnvArgs struct {
 	types.CommonArgs
 	MAC types.UnmarshallableString `json:"mac,omitempty"`
-}
-
-func NewPodWatcher() (*PodWatcher) {
-	return &PodWatcher{}
 }
 
 func loadNetConf(bytes []byte, envArgs string) (*NetConf, string, error) {
@@ -132,7 +121,7 @@ func setupVeth(netns ns.NetNS, br *netlink.Bridge, ifName string, mtu int, mac s
 }
 
 func getDefaultBridge(n *NetConf) (*netlink.Bridge, *current.Interface, error) {
-	
+
 	br, err := bridgeByName(n.BrName)
 	if err != nil {
 		return nil, nil, err
@@ -147,7 +136,7 @@ func getDefaultBridge(n *NetConf) (*netlink.Bridge, *current.Interface, error) {
 	}, nil
 }
 
-func (pw *PodWatcher) cmdAdd(args *skel.CmdArgs) error {
+func cmdAdd(args *skel.CmdArgs) error {
 	fmt.Printf("CMD_ADD : %v", args)
 	var success bool = false
 
@@ -279,7 +268,7 @@ func (pw *PodWatcher) cmdAdd(args *skel.CmdArgs) error {
 	return types.PrintResult(result, cniVersion)
 }
 
-func (pw *PodWatcher) cmdDel(args *skel.CmdArgs) error {
+func cmdDel(args *skel.CmdArgs) error {
 	fmt.Printf("CMD_DEL : %v", args)
 	n, _, err := loadNetConf(args.StdinData, args.Args)
 	if err != nil {
@@ -464,7 +453,7 @@ func validateCniContainerInterface(intf current.Interface) (cniBridgeIf, error) 
 	return vethFound, nil
 }
 
-func (pw *PodWatcher) cmdCheck(args *skel.CmdArgs) error {
+func cmdCheck(args *skel.CmdArgs) error {
 	fmt.Printf("CMD_CHECK : %v", args)
 
 	n, _, err := loadNetConf(args.StdinData, args.Args)
@@ -585,4 +574,9 @@ func (pw *PodWatcher) cmdCheck(args *skel.CmdArgs) error {
 	}
 
 	return nil
+}
+
+func main() {
+	//Register the patu plugin, once eBPF programs are loaded.
+	skel.PluginMain(cmdAdd, cmdCheck, cmdDel, version.All, bv.BuildString("patu"))
 }
