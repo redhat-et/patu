@@ -10,7 +10,8 @@ RUN go mod download
 
 ADD . .
 
-RUN go build -ldflags "-s -w" -o ./dist/patu ./cmd/patu/patu.go
+RUN go build -ldflags "-s -w" -o ./dist/patu ./cmd/patu/cni/patu-cni.go
+RUN go build -ldflags "-s -w" -o ./dist/patud ./cmd/patu/daemon/patu-daemon.go
 
 # Build eBPF prog objects and bpftool
 FROM ubuntu:22.04 as ebpf
@@ -45,6 +46,7 @@ COPY --from=ebpf bpf bpf
 COPY --from=ebpf /usr/local/sbin/bpftool /usr/local/sbin/bpftool
 COPY ./scripts/post-cni.sh /usr/local/sbin/
 COPY --from=patu /patu/dist/patu patu
+COPY --from=patu /patu/dist/patud patud
 RUN uname -r && apt-get update && apt-get install --no-install-recommends -y make sudo libelf-dev && apt-get autoremove -y && apt-get clean -y
 
 CMD /cni/patu

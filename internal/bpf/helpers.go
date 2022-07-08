@@ -42,7 +42,7 @@ func compileEbpfProg(debug bool) error {
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
-	fmt.Printf("eBPF programs compiled successfully.")
+	fmt.Println("eBPF programs compiled successfully.")
 	return nil
 }
 
@@ -65,7 +65,7 @@ func loadBpfProg(debug bool) error {
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
-	fmt.Printf("eBPF programs loaded successfully.")
+	fmt.Println("eBPF programs loaded successfully.")
 	return nil
 }
 
@@ -82,7 +82,7 @@ func attachBpfProg() error {
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
-	fmt.Printf("eBPF programs attached successfully.")
+	fmt.Println("eBPF programs attached successfully.")
 	return nil
 }
 
@@ -95,7 +95,7 @@ func detachBpfProg() error {
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
-	fmt.Printf("eBPF programs detached successfully.")
+	fmt.Println("eBPF programs detached successfully.")
 	return nil
 }
 
@@ -108,6 +108,6 @@ func unloadBpfProg() error {
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
-	fmt.Printf("eBPF programs attached successfully.")
+	fmt.Println("eBPF programs unloaded successfully.")
 	return nil
 }

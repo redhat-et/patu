@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package app
+package main
 
 import (
 	"cmd/patu/app/configs"
@@ -26,12 +26,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/containernetworking/cni/pkg/skel"
-	"github.com/containernetworking/cni/pkg/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	bv "github.com/containernetworking/plugins/pkg/utils/buildversion"
-
 )
 
 
@@ -51,11 +47,6 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf(err.Error());
 		}
 
-		pw := NewPodWatcher()
-		
-		//Register the patu plugin, once eBPF programs are loaded.
-		skel.PluginMain(pw.cmdAdd, pw.cmdCheck, pw.cmdDel, version.All, bv.BuildString("patu"))
-
 		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 		<-ch
@@ -67,7 +58,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func Execute() {
+func execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -95,4 +86,8 @@ func init() {
 	//Flags supported by patu app.
 	rootCmd.PersistentFlags().BoolVarP(&configs.Debug, "debug", "d", false, "Enable/Disable debug mode")
 	rootCmd.PersistentFlags().BoolVarP(&configs.Compile, "compile", "c", false, "Enable/Disable eBPF program compilation")
+}
+
+func main() {
+	execute()
 }
