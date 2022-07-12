@@ -20,9 +20,9 @@ limitations under the License.
 #include "include/helpers/maps.h"
 
 static inline void logSkskbMetadata(struct __sk_buff *skb) {
-  print_info("skmsg src-ip : >>%X<<  src-port: %d", bpf_htonl(skb->local_ip4),
+  print_info("sk_skb src-ip : >>%X<<  src-port: %d", bpf_htonl(skb->local_ip4),
              bpf_htons(skb->local_port));
-  print_info("skmsg dest-ip: >>%X<< dest-port: %d", bpf_htonl(skb->remote_ip4),
+  print_info("sk_skb dest-ip: >>%X<< dest-port: %d", bpf_htonl(skb->remote_ip4),
              bpf_htons(skb->remote_port));
 }
 
