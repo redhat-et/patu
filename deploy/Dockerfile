@@ -30,7 +30,7 @@ FROM ubuntu:22.04 as cni
 
 WORKDIR /cni
 
-RUN mkdir bpf && apt-get update && apt-get install --no-install-recommends -y sudo libelf-dev && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+RUN mkdir bpf && apt-get update && apt-get install --no-install-recommends -y make sudo libelf-dev && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ebpf bpf bpf
 COPY --from=ebpf /usr/local/sbin/bpftool /usr/local/sbin/bpftool
