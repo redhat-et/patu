@@ -9,7 +9,8 @@ ADD go.sum .
 ADD . .
 
 RUN go mod download && \
-    go build -ldflags "-s -w" -o ./dist/patu ./cmd/patu/cni/patu-cni.go && go build -ldflags "-s -w" -o ./dist/patud ./cmd/patu/daemon/patu-daemon.go
+    go build -ldflags "-s -w" -o ./dist/patu ./cmd/patu/cni/patu-cni.go && \
+    go build -ldflags "-s -w" -o ./dist/patud ./cmd/patu/daemon/patu-daemon.go
 
 # Build eBPF prog objects and bpftool
 FROM ubuntu:22.04 as ebpf
@@ -30,7 +31,11 @@ FROM ubuntu:22.04 as cni
 
 WORKDIR /cni
 
-RUN mkdir bpf && apt-get update && apt-get install --no-install-recommends -y make sudo libelf-dev && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+RUN mkdir bpf && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y make sudo libelf-dev && \
+    apt-get autoremove -y && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ebpf bpf bpf
 COPY --from=ebpf /usr/local/sbin/bpftool /usr/local/sbin/bpftool
