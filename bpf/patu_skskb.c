@@ -32,7 +32,7 @@ static inline void extract_socket_key_v4(struct __sk_buff *skb,
   sockkey->src_ip = skb->remote_ip4;
   sockkey->dst_ip = skb->local_ip4;
   sockkey->src_port = skb->remote_port >> 16;
-  sockkey->dst_port = bpf_htonl(skb->local_port);
+  sockkey->dst_port = bpf_htons(skb->local_port);
 }
 
 __section("sk_skb") int patu_skskb(struct __sk_buff *skb) {
