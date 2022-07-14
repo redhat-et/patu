@@ -6,12 +6,11 @@ WORKDIR /patu
 ADD go.mod .
 ADD go.sum .
 
-RUN go mod download
-
 ADD . .
 
-RUN go build -ldflags "-s -w" -o ./dist/patu ./cmd/patu/cni/patu-cni.go
-RUN go build -ldflags "-s -w" -o ./dist/patud ./cmd/patu/daemon/patu-daemon.go
+RUN go mod download && \
+    go build -ldflags "-s -w" -o ./dist/patu ./cmd/patu/cni/patu-cni.go && \
+    go build -ldflags "-s -w" -o ./dist/patud ./cmd/patu/daemon/patu-daemon.go
 
 # Build eBPF prog objects and bpftool
 FROM ubuntu:22.04 as ebpf
@@ -24,16 +23,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 COPY bpf bpf
 
 RUN apt-get update && apt-get install -y git cmake clang make gcc python3 libncurses-dev gawk flex bison openssl \
-    libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm
-
-RUN grep cgroup /proc/filesystems
-RUN uname -a
-
-RUN make -C bpf compile
-
-RUN git clone -b v$kernel https://github.com/torvalds/linux.git --depth 1
-
-RUN cd /linux/tools/bpf/bpftool && \
+    libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm && rm -rf /var/lib/apt/lists/* && make -C bpf compile && git clone -b v$kernel https://github.com/torvalds/linux.git --depth 1 && cd /linux/tools/bpf/bpftool && \
     make && make install  
 
 # Generate final image with eBPF program objects and Patu app.
@@ -41,12 +31,15 @@ FROM ubuntu:22.04 as cni
 
 WORKDIR /cni
 
-RUN mkdir bpf
+RUN mkdir bpf && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y make sudo libelf-dev && \
+    apt-get autoremove -y && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
 COPY --from=ebpf bpf bpf
 COPY --from=ebpf /usr/local/sbin/bpftool /usr/local/sbin/bpftool
 COPY ./scripts/post-cni.sh /usr/local/sbin/
-COPY --from=patu /patu/dist/patu patu
-COPY --from=patu /patu/dist/patud patud
-RUN uname -r && apt-get update && apt-get install --no-install-recommends -y make sudo libelf-dev && apt-get autoremove -y && apt-get clean -y
+COPY --from=patu /patu/dist/ .
 
 CMD /cni/patu
