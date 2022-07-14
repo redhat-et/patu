@@ -23,7 +23,7 @@ static inline void logSockopsMetadata(struct bpf_sock_ops *ctx) {
   print_info("sockops src-ip : >>%X<<  src-port: %d", bpf_htonl(ctx->local_ip4),
              bpf_htons(ctx->local_port));
   print_info("sockops dest-ip: >>%X<< dest-port: %d",
-             bpf_htonl(ctx->remote_ip4), bpf_htons(ctx->remote_port));
+             bpf_htonl(ctx->remote_ip4), ctx->remote_port >> 16);
 }
 
 static inline void extract_socket_key_v4(struct bpf_sock_ops *sockops,
