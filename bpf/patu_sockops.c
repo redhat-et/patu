@@ -35,20 +35,31 @@ static inline void extract_socket_key_v4(struct bpf_sock_ops *sockops,
   sockkey->dst_port = sockops->remote_port >> 16;
 }
 
-static inline int process_sockops_ipv4(struct bpf_sock_ops *skops) {
+static inline int is_ipv4_endpoint(__u32 ip) {
+  /* Check for static pod network 10.200.0.0/16*/
+  int netip = bpf_htonl(0x0ac80000);
 
-  struct socket_key sockkey = {};
-  extract_socket_key_v4(skops, &sockkey);
-  int ret = sock_hash_update(skops, &sockops_redir_map, &sockkey, BPF_NOEXIST);
-  if (ret != 0) {
-    print_info("ERROR: failed to updated sock hash map, ret: %d\n", ret);
-  } else {
-    print_info(
-        "Socket key is added successfully. ipv4 op = %d, port %d --> %d\n",
-        skops->op, skops->local_port, bpf_htonl(skops->remote_port));
+  return ((ip & bpf_htonl(0xffff0000)) == (netip & bpf_htonl(0xffff0000)));
+}
+
+static inline int process_sockops_ipv4(struct bpf_sock_ops *skops) {
+  if (is_ipv4_endpoint(skops->remote_ip4)) {
+    struct socket_key sockkey = {};
+    extract_socket_key_v4(skops, &sockkey);
+    int ret =
+        sock_hash_update(skops, &sockops_redir_map, &sockkey, BPF_NOEXIST);
+    if (ret != 0) {
+      print_info("ERROR: failed to updated sock hash map, ret: %d\n", ret);
+    } else {
+      print_info(
+          "Socket key is added successfully. ipv4 op = %d, port %d --> %d\n",
+          skops->op, skops->local_port, bpf_htonl(skops->remote_port));
+    }
+
+    return ret;
   }
 
-  return ret;
+  return 0;
 }
 
 __section("sockops") int patu_sockops(struct bpf_sock_ops *skops) {
