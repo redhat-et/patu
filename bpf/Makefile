@@ -74,10 +74,10 @@ detach-sk-skb:
 unload-sk-skb:
 	make -f Makefile.load unload-sk-skb
 
-load-prog: load-connect4 load-sendmsg4 load-recvmsg4 load-sockops load-sk-skb
-attach-prog: attach-sockops attach-sk-skb attach-connect4 attach-sendmsg4 attach-recvmsg4 
-detach-prog: detach-sk-skb detach-sockops  detach-connect4 detach-sendmsg4 detach-recvmsg4 
-unload-prog: unload-sk-skb unload-sockops  unload-connect4 unload-sendmsg4 unload-recvmsg4 
+load-prog: load-sockops load-sk-skb load-sendmsg4 load-recvmsg4 # load-connect4
+attach-prog: attach-sockops attach-sk-skb attach-sendmsg4 attach-recvmsg4 # attach-connect4
+detach-prog: detach-sk-skb detach-sockops detach-sendmsg4 detach-recvmsg4 # detach-connect4
+unload-prog: unload-sk-skb unload-sockops unload-sendmsg4 unload-recvmsg4 # unload-connect4
 
 load: load-maps load-prog
 attach: attach-prog
