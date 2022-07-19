@@ -16,5 +16,7 @@
 
 #!/bin/sh
 
+bridge=`awk '/"bridge"/' /etc/cni/net.d/10-patu.conf | cut -d '"' -f4`
 rm /opt/cni/bin/patu
 rm /etc/cni/net.d/10-patu.conf
+ip link delete $bridge
