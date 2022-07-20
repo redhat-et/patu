@@ -54,3 +54,7 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kuber
 
 - [kind](./hack/kind/README.md) - Local Kubernetes clusters primarily designed for testing Kubernetes
 - [Microshift](./hack/microshift/README.md) - OpenShift/Kubernetes optimized for the device edge
+
+
+### Note
+**This project work is in incubation state, so there are multiple open questions on the design of various CNI features (e.g Ingress, Network Policy), and we will address those as we progress.**
