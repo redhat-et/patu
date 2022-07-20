@@ -1,0 +1,18 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: patu
+networking:
+  kubeProxyMode: "none"
+  apiServerAddress: "0.0.0.0"
+  disableDefaultCNI: true
+  podSubnet: 10.200.0.0/16
+  #serviceSubnet: 10.300.0.0/16
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "kube-proxy=kpng"
+            authorization-mode: "AlwaysAllow"
