@@ -10,10 +10,16 @@ chmod +x ./kind
 sudo mv ./kind /usr/local/bin/kind
 ```
 
-* Start a single node kind cluster
+* Start a single node kind cluster with kube-proxy
 
 ```shell
-kind create cluster
+kind create cluster 
+```
+
+* Start a single node kind cluster without a default CNI and without kube-proxy
+
+```shell
+kind create cluster --config=./hack/kind/kind.yaml
 ```
 
 * Clone and start Patu
