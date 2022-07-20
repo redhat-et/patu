@@ -50,9 +50,7 @@ On your kubernetes node, install the bpftool (ensure you install the tool for th
 kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-
 ```
 
-### Microshift
-Coming Soon.
+### Supported Kubernetes Platforms
 
-
-
-**This work is just incubated, so there are multiple open questions on the design of various CNI features (e.g Ingress, Network Policy), and we will address those as we progress.**
+- [kind](./hack/kind/README.md) - Local Kubernetes clusters primarily designed for testing Kubernetes
+- [Microshift](./hack/microshift/README.md) - OpenShift/Kubernetes optimized for the device edge
