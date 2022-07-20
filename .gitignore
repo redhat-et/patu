@@ -55,3 +55,6 @@ dkms.conf
 .vscode/targets.log
 .vscode/git
 .vscode/configurationCache.log
+
+# jetbrains config files
+.idea/
