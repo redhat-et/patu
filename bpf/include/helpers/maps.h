@@ -17,18 +17,11 @@
 
 #include "common.h"
 
-/*struct bpf_map __section("maps") sockops_redir_map = {
-    .type = BPF_MAP_TYPE_SOCKHASH,
-    .key_size = sizeof(struct socket_key),
-    .value_size = sizeof(__u32),
-    .max_elem = 65535,
-};*/
-
 #define MAX_ELEMENT 65535
 
 struct btf_map {
   __uint(type, BPF_MAP_TYPE_SOCKHASH);
   __uint(max_elem, MAX_ELEMENT);
   __type(key, struct socket_key);
-  __type(value, u32);
+  __type(value, __u32);
 } sockops_redir_map SEC(".maps");

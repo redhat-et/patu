@@ -58,16 +58,6 @@ struct socket_key {
   __u16 dst_port;
 };
 
-struct bpf_map {
-  __u32 id;
-  __u32 type;
-  __u32 key_size;
-  __u32 value_size;
-  __u32 max_elem;
-  __u32 flags;
-  __u32 pinning;
-};
-
 static __u64 BPF_FUNC(get_current_pid_tgid);
 static __u64 BPF_FUNC(get_current_uid_gid);
 static void BPF_FUNC(trace_printk, const char *fmt, int fmt_size, ...);
