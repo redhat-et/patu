@@ -75,3 +75,5 @@ static int BPF_FUNC(sock_hash_update, struct bpf_sock_ops *skops,
                     struct bpf_map *map, void *key, __u64 flags);
 static long BPF_FUNC(sk_redirect_hash, struct __sk_buff *skb,
                      struct bpf_map *map, void *key, __u64 flag);
+static long BPF_FUNC(msg_redirect_hash, struct sk_msg_md *msg,
+                     struct bpf_map *map, void *key, __u64 flags);

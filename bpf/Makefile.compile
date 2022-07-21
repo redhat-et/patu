@@ -8,7 +8,7 @@ ifeq ($(DEBUG),1)
     MACROS:= $(MACROS) -DDEBUG
 endif
 
-TARGETS=patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skskb.o patu_sockops.o
+TARGETS=patu_connect4.o patu_recvmsg4.o patu_sendmsg4.o patu_skmsg.o patu_skskb.o patu_sockops.o
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(MACROS) -c $< -o $@

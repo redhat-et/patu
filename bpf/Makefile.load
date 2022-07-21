@@ -57,3 +57,13 @@ detach-sk-skb:
 	sudo bpftool -p -d prog detach pinned $(PROG_MOUNT_PATH)/skskb stream_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
 unload-sk-skb:
 	sudo rm $(PROG_MOUNT_PATH)/skskb
+
+load-sk-msg: load-sockops-redir-map
+	sudo bpftool -m -p -d prog load patu_skmsg.o $(PROG_MOUNT_PATH)/skmsg \
+		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+attach-sk-msg:
+	sudo bpftool -m -p -d prog attach pinned $(PROG_MOUNT_PATH)/skmsg msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+detach-sk-msg:
+	sudo bpftool -p -d prog detach pinned $(PROG_MOUNT_PATH)/skmsg msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+unload-sk-msg:
+	sudo rm $(PROG_MOUNT_PATH)/skmsg
