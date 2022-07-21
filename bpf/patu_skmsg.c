@@ -19,11 +19,11 @@ limitations under the License.
 #include "include/helpers/helpers.h"
 #include "include/helpers/maps.h"
 
-static inline void logSkskbMetadata(struct __sk_buff *skb) {
-  print_info("[sk_skb] src-ip : >>%X<<  src-port: %d",
-             bpf_htonl(skb->local_ip4), (bpf_htonl(skb->local_port)) >> 16);
-  print_info("[sk_skb] dest-ip: >>%X<< dest-port: %d",
-             bpf_htonl(skb->remote_ip4), skb->remote_port >> 16);
+static inline void logSkmsgMetadata(struct sk_msg_md *msg) {
+  print_info("[sk_msg] src-ip : >>%X<<  src-port: %d",
+             bpf_htonl(msg->local_ip4), (bpf_htonl(msg->local_port)) >> 16);
+  print_info("[sk_msg] dest-ip: >>%X<< dest-port: %d",
+             bpf_htonl(msg->remote_ip4), msg->remote_port >> 16);
 }
 
 static inline int is_ipv4_endpoint(__u32 ip) {
@@ -33,28 +33,28 @@ static inline int is_ipv4_endpoint(__u32 ip) {
   return ((ip & bpf_htonl(0xffff0000)) == (netip & bpf_htonl(0xffff0000)));
 }
 
-static inline void extract_socket_key_v4(struct __sk_buff *skb,
+static inline void extract_socket_key_v4(struct sk_msg_md *msg,
                                          struct socket_key *sockkey) {
 
-  sockkey->src_ip = skb->remote_ip4;
-  sockkey->dst_ip = skb->local_ip4;
-  sockkey->src_port = skb->remote_port >> 16;
-  sockkey->dst_port = (bpf_htonl(skb->local_port)) >> 16;
+  sockkey->src_ip = msg->remote_ip4;
+  sockkey->dst_ip = msg->local_ip4;
+  sockkey->src_port = msg->remote_port >> 16;
+  sockkey->dst_port = (bpf_htonl(msg->local_port)) >> 16;
 }
 
-__section("sk_skb/stream_verdict") int patu_skskb(struct __sk_buff *skb) {
-  if (is_ipv4_endpoint(skb->remote_ip4)) {
+__section("sk_msg") int patu_skmsg(struct sk_msg_md *msg) {
+  if (is_ipv4_endpoint(msg->remote_ip4)) {
 
-    logSkskbMetadata(skb);
+    logSkmsgMetadata(msg);
 
     struct socket_key sockkey = {};
-    extract_socket_key_v4(skb, &sockkey);
+    extract_socket_key_v4(msg, &sockkey);
     long result =
-        sk_redirect_hash(skb, &sockops_redir_map, &sockkey, BPF_F_INGRESS);
+        msg_redirect_hash(msg, &sockops_redir_map, &sockkey, BPF_F_INGRESS);
     if (result) {
-      print_info("[sk_skb], packets redirected from source port %d "
+      print_info("[sk_msg], packets redirected from source port %d "
                  "to destination port %d",
-                 (bpf_htonl(skb->local_port)) >> 16, skb->remote_port >> 16);
+                 (bpf_htonl(msg->local_port)) >> 16, msg->remote_port >> 16);
     }
   }
   return SK_PASS;

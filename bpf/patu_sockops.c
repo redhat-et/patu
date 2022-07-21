@@ -20,9 +20,9 @@ limitations under the License.
 #include "include/helpers/maps.h"
 
 static inline void logSockopsMetadata(struct bpf_sock_ops *ctx) {
-  print_info("sockops src-ip : >>%X<<  src-port: %d", bpf_htonl(ctx->local_ip4),
-             bpf_htons(ctx->local_port));
-  print_info("sockops dest-ip: >>%X<< dest-port: %d",
+  print_info("[sockops] src-ip : >>%X<<  src-port: %d",
+             bpf_htonl(ctx->local_ip4), (bpf_htonl(ctx->local_port) >> 16));
+  print_info("[sockops] dest-ip: >>%X<< dest-port: %d",
              bpf_htonl(ctx->remote_ip4), ctx->remote_port >> 16);
 }
 
@@ -30,7 +30,7 @@ static inline void extract_socket_key_v4(struct bpf_sock_ops *sockops,
                                          struct socket_key *sockkey) {
 
   sockkey->src_ip = sockops->local_ip4;
-  sockkey->src_port = bpf_htons(sockops->local_port);
+  sockkey->src_port = bpf_htonl(sockops->local_port) >> 16;
   sockkey->dst_ip = sockops->remote_ip4;
   sockkey->dst_port = sockops->remote_port >> 16;
 }
@@ -44,16 +44,19 @@ static inline int is_ipv4_endpoint(__u32 ip) {
 
 static inline int process_sockops_ipv4(struct bpf_sock_ops *skops) {
   if (is_ipv4_endpoint(skops->remote_ip4)) {
+    logSockopsMetadata(skops);
     struct socket_key sockkey = {};
     extract_socket_key_v4(skops, &sockkey);
     int ret =
         sock_hash_update(skops, &sockops_redir_map, &sockkey, BPF_NOEXIST);
     if (ret != 0) {
-      print_info("ERROR: failed to updated sock hash map, ret: %d\n", ret);
+      print_info("[sockops] ERROR: failed to updated sock hash map, ret: %d\n",
+                 ret);
     } else {
-      print_info(
-          "Socket key is added successfully. ipv4 op = %d, port %d --> %d\n",
-          skops->op, skops->local_port, bpf_htonl(skops->remote_port));
+      print_info("[sockops] Socket key is added successfully. ipv4 op = %d, "
+                 "port %d --> %d\n",
+                 skops->op, (bpf_htonl(skops->local_port)) >> 16,
+                 skops->remote_port >> 16);
     }
 
     return ret;
@@ -63,8 +66,6 @@ static inline int process_sockops_ipv4(struct bpf_sock_ops *skops) {
 }
 
 __section("sockops") int patu_sockops(struct bpf_sock_ops *skops) {
-  logSockopsMetadata(skops);
-
   __u32 family, operator;
   family = skops->family;
   operator= skops->op;
@@ -73,12 +74,9 @@ __section("sockops") int patu_sockops(struct bpf_sock_ops *skops) {
   case BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB:
   case BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB:
     if (family == 2) { // AFI_NET,refer socket.h
-      if (process_sockops_ipv4(skops))
-        return 1;
-      else
-        return 0;
+      process_sockops_ipv4(skops);
+      break;
     }
-    break;
   default:
     break;
   }
