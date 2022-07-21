@@ -16,6 +16,7 @@ limitations under the License.
 
 #pragma once
 
+#include "maps.h"
 #include <linux/bpf.h>
 #include <linux/swab.h>
 
@@ -56,16 +57,6 @@ struct socket_key {
   __u32 dst_ip;
   __u16 src_port;
   __u16 dst_port;
-};
-
-struct bpf_map {
-  __u32 id;
-  __u32 type;
-  __u32 key_size;
-  __u32 value_size;
-  __u32 max_elem;
-  __u32 flags;
-  __u32 pinning;
 };
 
 static __u64 BPF_FUNC(get_current_pid_tgid);

@@ -15,11 +15,19 @@
  */
 #pragma once
 
-#include <linux/bpf.h>
+#define __uint(name, val) int(*name)[val]
+#define __type(name, val) typeof(val) *name
 
-struct bpf_map __section("maps") sockops_redir_map = {
-    .type = BPF_MAP_TYPE_SOCKHASH,
-    .key_size = sizeof(struct socket_key),
-    .value_size = sizeof(__u32),
-    .max_elem = 65535,
-};
+#define SEC(name)                                                              \
+  _Pragma("GCC diagnostic push")                                               \
+      _Pragma("GCC diagnostic ignored \"-Wignored-attributes\"")               \
+          __attribute__((section(name), used)) _Pragma("GCC diagnostic pop")
+
+#define MAX_ENTRIES 65535
+
+struct bpf_map {
+  __uint(type, BPF_MAP_TYPE_SOCKHASH);
+  __uint(max_entries, MAX_ENTRIES);
+  __type(key, struct socket_key);
+  __type(value, __u32);
+} sockops_redir_map SEC(".maps");
