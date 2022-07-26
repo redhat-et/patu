@@ -18,17 +18,19 @@ The Kubernetes Proxy NG a new design of kube-proxy. Using the eBPF backend here,
     Cmd: `docker build -t \<imagename:tag\> -f Dockerfile .`  
         e.g. `docker build -t kpng:test -f Dockerfile .`
 5. Set the following variables:  
-    - NAMESPACE="kube-system"  
-    - CONFIG_MAP_NAME="kpng"  
-    - CONFIG_MAP_NAME="kpng"  
-    - CLUSTER_ROLE_NAME="system:node-proxier"  
-    - CLUSTER_ROLE_BINDING_NAME="kpng"  
+     ```
+      NAMESPACE="kube-system"  
+      CONFIG_MAP_NAME="kpng" 
+      SERVICE_ACCOUNT_NAME="kpng"
+      CLUSTER_ROLE_NAME="system:node-proxier"
+      CLUSTER_ROLE_BINDING_NAME="kpng"
+      ```  
 6. Commands concerning pre-requisites:  
-    - `kubectl create serviceaccount --namespace ${NAMESPACE} ${SERVICE_ACCOUNT_NAME}`  
-
-    - `kubectl create clusterrolebinding ${CLUSTER_ROLE_BINDING_NAME} --clusterrole=${CLUSTER_ROLE_NAME} --serviceaccount=${NAMESPACE}:${SERVICE_ACCOUNT_NAME}` 
-    
-    - `kubectl create configmap ${CONFIG_MAP_NAME} --namespace ${NAMESPACE}  --from-file /etc/kubernetes/admin.conf`  
+    ```
+     kubectl create serviceaccount --namespace ${NAMESPACE} ${SERVICE_ACCOUNT_NAME}   
+     kubectl create clusterrolebinding ${CLUSTER_ROLE_BINDING_NAME} --clusterrole=${CLUSTER_ROLE_NAME} --serviceaccount=${NAMESPACE}:${SERVICE_ACCOUNT_NAME} 
+     kubectl create configmap ${CONFIG_MAP_NAME} --namespace ${NAMESPACE}  --from-file /etc/kubernetes/admin.conf
+     ```  
 7. Label node:  
     `kubectl label node <NODE-NAME> kube-proxy=kpng`  
 8. Deploy KPNG:  
