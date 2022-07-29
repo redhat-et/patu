@@ -12,16 +12,16 @@ The Kubernetes Proxy NG a new design of kube-proxy. Using the eBPF backend here,
     `kubectl delete daemonsets -n kube-system kube-proxy`  
 2. Build KPNG  
     Repository: https://github.com/kubernetes-sigs/kpng  
-    Cmd: `docker build -t \<imagename:tag\> -f Dockerfile .`    
+    Cmd: `docker build -t <imagename:tag> -f Dockerfile .`    
         e.g. `docker build -t kpng:test -f Dockerfile .`  
-3. Replace the placeholder `\<imagename:tag\>` with the selected imagename:tag in `./kpngebpf.yaml`  
+3. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml`  
 
 
 ### If PATU hasn't been deployed yet:  
 
 4. Copy `../../deploy/patu.yaml`, `./kpngebpf.yaml`, `./patu` to a directory, say `dir` on the server  
 5. Deploy patu and kpng  
-    `\<path-to-dir\>/dir/patu apply`  
+    `<path-to-dir>/dir/patu apply`  
     Ensure the script doesn't result in any errors. 
 6. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready  
 
@@ -30,7 +30,7 @@ The Kubernetes Proxy NG a new design of kube-proxy. Using the eBPF backend here,
 
 4. Copy `./kpngebpf.yaml`, `./kpng` to a directory, say `dir` on the server  
 5. Deploy kpng  
-    `\<path-to-dir\>/dir/kpng apply`  
+    `<path-to-dir>/dir/kpng apply`  
     Ensure the script doesn't result in any errors. 
 6. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready  
 
@@ -39,7 +39,7 @@ The Kubernetes Proxy NG a new design of kube-proxy. Using the eBPF backend here,
 
 1. Copy `./patu` to a directory, say `dir` on the server  
 2. Delete patu and kpng  
-    `\<path-to-dir\>/dir/patu delete`  
+    `<path-to-dir>/dir/patu delete`  
     Ensure the script doesn't result in any errors. 
 
 
@@ -47,7 +47,7 @@ The Kubernetes Proxy NG a new design of kube-proxy. Using the eBPF backend here,
 
 1. Copy `./kpng` to a directory, say `dir` on the server  
 2. Delete patu and kpng  
-    `\<path-to-dir\>/dir/kpng delete`  
+    `<path-to-dir>/dir/kpng delete`  
     Ensure the script doesn't result in any errors. 
 
 
