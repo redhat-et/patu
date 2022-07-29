@@ -53,6 +53,9 @@ data:
         "type": "host-local",
         "ranges": [
             [{ "subnet": "10.200.0.0/16" }]
+        ],
+        "routes": [
+            { "dst": "0.0.0.0/0" }
         ]
       }
     }
