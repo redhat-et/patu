@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright © 2022 Authors of Patu
 #

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+set -x
 shopt -s expand_aliases
 
 : "${E2E_GO_VERSION:="1.17.3"}"
@@ -30,13 +30,6 @@ OS=$(uname | tr '[:upper:]' '[:lower:]')
 CONTAINER_ENGINE="docker"
 KUBECONFIG_TESTS="kubeconfig_tests.conf"
 BIN_DIRECTORY="bin"
-
-GINKGO_FOCUS="\[sig-network\]"
-GINKGO_SKIP_TESTS="machinery|Feature|Federation|PerformanceDNS|Disruptive|Serial|LoadBalancer|GCE|Netpol|NetworkPolicy"
-GINKGO_REPORT_DIR="artifacts/reports"
-GINKGO_DUMP_LOGS_ON_FAILURE=false
-GINKGO_DISABLE_LOG_DUMP=true
-GINKGO_PROVIDER="local"
 
 function if_error_exit() {
     ###########################################################################
@@ -136,43 +129,6 @@ function setup_kubectl() {
     pass_message "The kubectl tool is set."
 }
 
-function setup_ginkgo() {
-    ###########################################################################
-    # Description:                                                            #
-    # setup ginkgo and e2e.test                                               #
-    #                                                                         #
-    # # Arguments:                                                            #
-    #   arg1: binary directory, path to where ginko will be installed         #
-    #   arg2: Kubernetes version                                              #
-    #   arg3: OS, name of the operating system                                #
-    ###########################################################################
-
-    [ $# -eq 3 ]
-    if_error_exit "Wrong number of arguments to ${FUNCNAME[0]}"
-
-    local bin_directory=${1}
-    local k8s_version=${2}
-    local os=${3}
-    local temp_directory=$(mktemp -qd)
-
-    if ! [ -f "${bin_directory}"/ginkgo ] || ! [ -f "${bin_directory}"/e2e.test ]; then
-        echo -e "\nDownloading ginkgo and e2e.test ..."
-        curl -L https://dl.k8s.io/"${k8s_version}"/kubernetes-test-"${os}"-amd64.tar.gz \
-            -o "${temp_directory}"/kubernetes-test-"${os}"-amd64.tar.gz
-        if_error_exit "cannot download kubernetes-test package"
-
-        tar xvzf "${temp_directory}"/kubernetes-test-"${os}"-amd64.tar.gz \
-            --directory "${bin_directory}" \
-            --strip-components=3 kubernetes/test/bin/ginkgo kubernetes/test/bin/e2e.test &>/dev/null
-
-        rm -rf "${temp_directory}"
-        sudo chmod +rx "${bin_directory}/ginkgo"
-        sudo chmod +rx "${bin_directory}/e2e.test"
-    fi
-
-    pass_message "The tools ginko and e2e.test have been set up."
-}
-
 function add_to_path() {
     ###########################################################################
     # Description:                                                            #
@@ -220,6 +176,65 @@ function set_e2e_dir() {
     popd >/dev/null || exit
 }
 
+function setup_ginkgo() {
+    ###########################################################################
+    # Description:                                                            #
+    # setup ginkgo and e2e.test                                               #
+    #                                                                         #
+    # # Arguments:                                                            #
+    #   arg1: binary directory, path to where ginko will be installed         #
+    #   arg2: Kubernetes version                                              #
+    #   arg3: OS, name of the operating system                                #
+    ###########################################################################
+
+    [ $# -eq 3 ]
+    if_error_exit "Wrong number of arguments to ${FUNCNAME[0]}"
+
+    local bin_directory=${1}
+    local k8s_version=${2}
+    local os=${3}
+    local temp_directory=$(mktemp -qd)
+
+    if ! [ -f "${bin_directory}"/ginkgo ] || ! [ -f "${bin_directory}"/e2e.test ]; then
+        echo -e "\nDownloading ginkgo and e2e.test ..."
+        curl -L https://dl.k8s.io/"${k8s_version}"/kubernetes-test-"${os}"-amd64.tar.gz \
+            -o "${temp_directory}"/kubernetes-test-"${os}"-amd64.tar.gz
+        if_error_exit "cannot download kubernetes-test package"
+
+        tar xvzf "${temp_directory}"/kubernetes-test-"${os}"-amd64.tar.gz \
+            --directory "${bin_directory}" \
+            --strip-components=3 kubernetes/test/bin/ginkgo kubernetes/test/bin/e2e.test &>/dev/null
+
+        rm -rf "${temp_directory}"
+        sudo chmod +rx "${bin_directory}/ginkgo"
+        sudo chmod +rx "${bin_directory}/e2e.test"
+    fi
+
+    pass_message "The tools ginko and e2e.test have been set up."
+}
+
+function setup_j2() {
+    ###########################################################################
+    # Description:                                                            #
+    # Install j2 binary                                                       #
+    ###########################################################################
+    export PATH=~/.local/bin:$PATH
+    if ! command_exists j2; then
+        if ! command_exists pip; then
+            echo "Dependency not met: attempting to install pip with python -m ensurepip --upgrade"
+            curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+            python3 get-pip.py
+            export PATH=~/.local/bin:$PATH
+        fi
+
+        echo "'j2' not found, installing with 'pip'"
+        pip install wheel --user
+        pip freeze | grep j2cli || pip install j2cli[yaml] --user
+        if_error_exit "cannot download j2"
+    fi
+    pass_message "The tool j2 is installed."
+}
+
 function setup_kind() {
     ###########################################################################
     # Description:                                                            #
@@ -251,28 +266,6 @@ function setup_kind() {
     fi
 
     pass_message "The kind tool is set."
-}
-
-function setup_j2() {
-    ###########################################################################
-    # Description:                                                            #
-    # Install j2 binary                                                       #
-    ###########################################################################
-    export PATH=~/.local/bin:$PATH
-    if ! command_exists j2; then
-        if ! command_exists pip; then
-            echo "Dependency not met: attempting to install pip with python -m ensurepip --upgrade"
-            curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-            python3 get-pip.py
-            export PATH=~/.local/bin:$PATH
-        fi
-
-        echo "'j2' not found, installing with 'pip'"
-        pip install wheel --user
-        pip freeze | grep j2cli || pip install j2cli[yaml] --user
-        if_error_exit "cannot download j2"
-    fi
-    pass_message "The tool j2 is installed."
 }
 
 function install_binaries() {
@@ -575,74 +568,6 @@ function wait_until_cluster_is_ready() {
     pass_message "${cluster_name} is operational."
 }
 
-function run_tests() {
-    ###########################################################################
-    # Description:                                                            #
-    # Execute the tests with ginkgo                                           #
-    #                                                                         #
-    # Arguments:                                                              #
-    #   arg1: e2e directory                                                   #
-    #   arg2: e2e_test, path to test binary                                   #
-    #   arg3: parallel ginkgo tests boolean                                   #
-    ###########################################################################
-
-    [ $# -eq 3 ]
-    if_error_exit "Wrong number of arguments to ${FUNCNAME[0]}"
-
-    local e2e_dir="${1}"
-    local e2e_test="${2}"
-    local parallel="${3}"
-
-    local artifacts_directory="${e2e_dir}/artifacts"
-
-    [ -f "${artifacts_directory}/${KUBECONFIG_TESTS}" ]
-    if_error_exit "Directory \"${artifacts_directory}/${KUBECONFIG_TESTS}\" does not exist"
-
-    [ -f "${e2e_test}" ]
-    if_error_exit "File \"${e2e_test}\" does not exist"
-
-    # ginkgo regexes
-    local ginkgo_skip="${GINKGO_SKIP_TESTS:-}"
-    local ginkgo_focus=${GINKGO_FOCUS:-"\\[Conformance\\]"}
-    # if we set PARALLEL=true, skip serial tests set --ginkgo-parallel
-    if [ "${parallel}" = "true" ]; then
-        export GINKGO_PARALLEL=y
-        if [ -z "${skip}" ]; then
-            ginkgo_skip="\\[Serial\\]"
-        else
-            ginkgo_skip="\\[Serial\\]|${ginkgo_skip}"
-        fi
-    fi
-
-    # setting this env prevents ginkgo e2e from trying to run provider setup
-    export KUBERNETES_CONFORMANCE_TEST='y'
-    export KUBE_CONTAINER_RUNTIME=remote
-    export KUBE_CONTAINER_RUNTIME_ENDPOINT=unix:///run/containerd/containerd.sock
-    export KUBE_CONTAINER_RUNTIME_NAME=containerd
-
-    echo ginkgo --nodes=1 \
-        --focus="${ginkgo_focus}" \
-        --skip="${ginkgo_skip}" \
-        "${e2e_test}" \
-        -- \
-        --kubeconfig="${artifacts_directory}/${KUBECONFIG_TESTS}" \
-        --provider="${GINKGO_PROVIDER}" \
-        --dump-logs-on-failure="${GINKGO_DUMP_LOGS_ON_FAILURE}" \
-        --report-dir="${GINKGO_REPORT_DIR}" \
-        --disable-log-dump="${GINKGO_DISABLE_LOG_DUMP}"
-
-    ginkgo --nodes=1 \
-        --focus="${ginkgo_focus}" \
-        --skip="${ginkgo_skip}" \
-        "${e2e_test}" \
-        -- \
-        --kubeconfig="${artifacts_directory}/${KUBECONFIG_TESTS}" \
-        --provider="${GINKGO_PROVIDER}" \
-        --dump-logs-on-failure="${GINKGO_DUMP_LOGS_ON_FAILURE}" \
-        --report-dir="${GINKGO_REPORT_DIR}" \
-        --disable-log-dump="${GINKGO_DISABLE_LOG_DUMP}"
-}
-
 function create_infrastructure_and_run_tests() {
     ###########################################################################
     # Description:                                                            #
@@ -692,12 +617,6 @@ function create_infrastructure_and_run_tests() {
     wait_until_cluster_is_ready "${cluster_name}" "${ci_mode}"
 
     echo "${cluster_name}" >"${e2e_dir}"/clustername
-
-    run_tests "${e2e_dir}" "${e2e_test}" "false"
-    #need to clean this up
-    if [ "${ci_mode}" = false ]; then
-        clean_artifacts "${e2e_dir}"
-    fi
 }
 
 function delete_kind_clusters() {
@@ -895,13 +814,6 @@ function main() {
         if ! ${devel_mode}; then
             print_reports "${ip_family}" "${backend}" "${e2e_dir}" "-${suffix}" "${cluster_count}"
         fi
-    fi
-    if ${devel_mode}; then
-        echo -e "\n+=====================================================================================+"
-        echo -e "\t\tDeveloper mode no test run!"
-        echo -e "+=====================================================================================+"
-    elif ! ${ci_mode}; then
-        delete_kind_clusters "${bin_dir}" "${ip_family}" "${backend}" "${suffix}" "${cluster_count}"
     fi
 }
 
