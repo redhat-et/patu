@@ -1,13 +1,5 @@
 name: Build and Push KPNG Image
-on:
-  workflow_dispatch:
-    # Inputs the workflow accepts.
-    inputs:
-      name: Build and Push KPNG Image
-        # Friendly description to be shown in the UI instead of 'name'
-        description: 'Clone KPNG repo and build the image and push it to patu packages.'
-        default: 'Clone KPNG repo and build the image and push it to patu packages.'
-        required: true
+on: workflow_dispatch
 
 env:
   REGISTRY: ghcr.io
