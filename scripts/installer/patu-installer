@@ -66,8 +66,3 @@ else
         kubectl label node $local_node kube-proxy-
     fi
 fi
-
-
-
-
- 
