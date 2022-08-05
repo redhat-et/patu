@@ -29,7 +29,7 @@ opt=$2
 (ip addr | awk '/inet/{print $2}' | awk -F/ '{print $1}') > /tmp/internal_ip.txt
 local_node=$(kubectl get node -o wide | grep -f /tmp/internal_ip.txt | awk '{print $1}')
 
-if [ "$arg" != "apply" ] && [ "$arg" != "delete" ] && [ "$opt" != "cni" ] && [ "$opt" != "kpng" ] && [ "$opt" != "all" ]
+if [[ "$arg" != "apply"  &&  "$arg" != "delete" ]] || [[ "$opt" != "cni"  &&  "$opt" != "kpng"  &&  "$opt" != "all" ]]
 then
  echo -e "Usage details:\nRun as ./patu-installer <COMMAND> <OPTION>\nCOMMAND: apply | delete\nOPTION: cni | kpng | all"
 elif [ "$arg" = "apply" ]
@@ -37,32 +37,34 @@ then
     if [ "$opt" = "all" ]
     then
         kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
-        kubectl apply -f ../../deploy/patu.yaml
+        kubectl apply -f patu/deploy/patu.yaml
         kubectl label node $local_node kube-proxy=kpng
         kubectl create configmap kpng --namespace kube-system --from-file /etc/kubernetes/admin.conf
-        kubectl apply -f ../../hack/kubernetes/kpngebpf.yaml
+        kubectl apply -f patu/hack/kubernetes/kpngebpf.yaml
     elif [ "$opt" = "cni" ]
     then
-        kubectl apply -f ../../deploy/patu.yaml
+        kubectl apply -f patu/deploy/patu.yaml
     else
         kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
         kubectl label node $local_node kube-proxy=kpng
         kubectl create configmap kpng --namespace kube-system --from-file /etc/kubernetes/admin.conf
-        kubectl apply -f ../../hack/kubernetes/kpngebpf.yaml
+        kubectl apply -f patu/hack/kubernetes/kpngebpf.yaml
+    fi
 else
     if [ "$opt" = "all" ]
     then
-        kubectl delete -f ../../hack/kubernetes/kpngebpf.yaml
+        kubectl delete -f patu/hack/kubernetes/kpngebpf.yaml
         kubectl delete cm kpng -n kube-system
         kubectl label node $local_node kube-proxy-
-        kubectl delete -f ../../deploy/patu.yaml
+        kubectl delete -f patu/deploy/patu.yaml
     elif [ "$opt" = "cni" ]
     then
-        kubectl delete -f ../../deploy/patu.yaml
+        kubectl delete -f patu/deploy/patu.yaml
     else
-        kubectl delete -f ../../hack/kubernetes/kpngebpf.yaml
+        kubectl delete -f patu/hack/kubernetes/kpngebpf.yaml
         kubectl delete cm kpng -n kube-system
         kubectl label node $local_node kube-proxy-
+    fi
 fi
 
 
