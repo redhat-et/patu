@@ -168,4 +168,3 @@ spec:
       - name: patu-conf
         configMap:
           name: patu-cni-conf
-        
