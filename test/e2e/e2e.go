@@ -72,7 +72,7 @@ var _ = ginkgo.Describe("Validate patu ebpf programs are loaded", func() {
 			framework.Failf("The program %s was not found\n", patuCgroupSockSend)
 		}
 	})
-	ginkgo.It("4. Verify cgroup_sock_addr program named patu_sendmsg4 is loaded", func() {
+	ginkgo.It("4. Verify cgroup_sock_addr program named patu_recvmsg4 is loaded", func() {
 		if !strings.Contains(bpfOut, patuCgroupSockRecv) {
 			framework.Failf("The program %s was not found\n", patuCgroupSockRecv)
 		}
