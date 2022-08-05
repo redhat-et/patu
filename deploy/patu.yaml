@@ -80,7 +80,7 @@ spec:
       hostNetwork: true
       initContainers:
       - name: install-patu-cni
-        image: "ghcr.io/redhat-et/patu:latest"
+        image: "docker.io/punakshi/redhat-intern:route"
         imagePullPolicy: Always
         command:
         - cp
@@ -92,7 +92,7 @@ spec:
           - name: host-opt-cni-bin
             mountPath: /opt/cni/bin/
       - name: install-patu-conf
-        image: "ghcr.io/redhat-et/patu:latest"
+        image: "docker.io/punakshi/redhat-intern:route"
         imagePullPolicy: Always
         command:
         - cp
@@ -106,7 +106,7 @@ spec:
           - name: patu-conf
             mountPath: /etc/patu/
       containers:
-      - image: "ghcr.io/redhat-et/patu:latest"
+      - image: "docker.io/punakshi/redhat-intern:route"
         imagePullPolicy: Always
         name: patu
         args:
