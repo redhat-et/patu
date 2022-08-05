@@ -1,0 +1,69 @@
+name: Build and Push KPNG Image
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      name: Build and Push KPNG Image
+        # Friendly description to be shown in the UI instead of 'name'
+        description: 'Clone KPNG repo and build the image and push it to patu packages.'
+        default: 'Clone KPNG repo and build the image and push it to patu packages.'
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: redhat-et/kpng
+
+
+jobs:
+  build:
+    name: Build KPNG Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          repository: kubernetes-sigs/kpng
+          path: kpng
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      # Workaround: https://github.com/docker/build-push-action/issues/461
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
+
+      - name: Login Github Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Extract metadata (tags, labels) for Docker
+      # https://github.com/docker/metadata-action
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+              # set latest tag for default branch
+              type=raw,value=latest
+      # Build and push Docker image with Buildx
+      # https://github.com/docker/build-push-action
+      - name: Build and Push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
+        with:
+          context: .
+          push: true
+          file: Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
