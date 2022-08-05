@@ -3,8 +3,9 @@ name: Build and Push KPNG Image
 on:
   push:
     branches: [ "main" ]
-
-
+  pull_request:
+    branches: [ "main" ]
+    
 env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
