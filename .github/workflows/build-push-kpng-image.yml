@@ -1,5 +1,9 @@
 name: Build and Push KPNG Image
-on: workflow_dispatch
+#on: workflow_dispatch
+on:
+  push:
+    branches: [ "main" ]
+
 
 env:
   REGISTRY: ghcr.io
