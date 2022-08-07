@@ -31,7 +31,7 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
     Repository: https://github.com/kubernetes-sigs/kpng  
     Cmd: `docker build -t <imagename:tag> -f Dockerfile .`    
         e.g. `docker build -t kpng:test -f Dockerfile .`  
-2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml`  
+2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml` in the cloned repository  
 3. Deploy kpng  
     Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer kpng apply`   
     Ensure the script doesn't result in any errors.  
@@ -53,7 +53,7 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
     Repository: https://github.com/kubernetes-sigs/kpng  
     Cmd: `docker build -t <imagename:tag> -f Dockerfile .`    
         e.g. `docker build -t kpng:test -f Dockerfile .`  
-2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml`  
+2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml` in the cloned repository  
 3. Deploy patu and kpng  
     Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer all apply`   
     Ensure the script doesn't result in any errors.  
@@ -78,7 +78,7 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
     Repository: https://github.com/kubernetes-sigs/kpng  
     Cmd: `docker build -t <imagename:tag> -f Dockerfile .`    
         e.g. `docker build -t kpng:test -f Dockerfile .`  
-2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml`  
+2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml` in the cloned repository  
 3. Extract node name:  
     ```
     (ip addr | awk '/inet/{print $2}' | awk -F/ '{print $1}') > /tmp/internal_ip.txt  
