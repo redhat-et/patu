@@ -44,31 +44,36 @@ jobs:
     - name: checkout
       uses: actions/checkout@v2
 
-    - name: setup ebpf dependencies
+    - name: Setup ebpf dependencies
       run: |
         export GOBIN=$(go env GOPATH)/bin
         export PATH=$PATH:$GOBIN
         echo "PATH=$PATH" >> $GITHUB_ENV
         go install github.com/cilium/ebpf/cmd/bpf2go@master
-        sudo apt-get install -y clang llvm libelf-dev libpcap-dev gcc-multilib build-essential
+        sudo apt-get install -y clang llvm libelf-dev libpcap-dev gcc-multilib build-essential linux-tools-common
 
-    - name: run e2e tests
-      run: ./scripts/test-e2e.sh -i ${{ env.IP_FAMILY }} -b ${{ env.BACKEND }} -c -n 1
+    - name: Setup cluster
+      run: make -C test IP_FAMILY=${{ matrix.ipFamily }} BACKEND=${{ matrix.backend }} install-kind
+
+    - name: Run e2e tests
+      run: |
+        export "PATH=$HOME/work/patu/patu/test/temp/e2e/bin:$PATH"
+        make -C test IP_FAMILY=${{ matrix.ipFamily }} BACKEND=${{ matrix.backend }} run-e2e
 
     - name: Export logs
       if: always()
       run: |
-        ./scripts/e2e-export-logs.sh
+        ./test/scripts/e2e-export-logs.sh
 
     - name: Upload Junit Reports
       if: always()
       uses: actions/upload-artifact@v2
       with:
         name: kind-junit-${{ env.JOB_NAME }}-${{ github.run_id }}
-        path: './scripts/temp/e2e/artifacts/reports/*.xml'
+        path: './test/scripts/temp/e2e/artifacts/reports/*.xml'
 
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v2
       if: always()
       with:
-        report_paths: './scripts/temp/e2e/artifacts/reports/*.xml'
+        report_paths: './test/scripts/temp/e2e/artifacts/reports/*.xml'
