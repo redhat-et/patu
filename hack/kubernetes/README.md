@@ -20,7 +20,7 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
 
 #### Install PATU CNI  
 1. Deploy Patu  
-    Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer cni apply`  
+    Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer apply cni`  
     Ensure the script doesn't result in any errors.   
 2. Ensure status - All pods should be in running state. Coredns pods should have IP from patu CIDR as mentioned in <path-to-patu-repo>/patu/deploy/patu.yaml, and should be running but not ready
 
@@ -33,18 +33,18 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
         e.g. `docker build -t kpng:test -f Dockerfile .`  
 2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml` in the cloned repository  
 3. Deploy kpng  
-    Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer kpng apply`   
+    Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer apply kpng`   
     Ensure the script doesn't result in any errors.  
 4. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready 
 
 
 #### Remove KPNG  
-1. Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer kpng delete`  
+1. Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer delete kpng`  
    Ensure the script doesn't result in any errors.
 
 
 #### Remove PATU CNI
-1. Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer cni delete`    
+1. Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer delete cni`    
    Ensure the script doesn't result in any errors.  
 
 
@@ -55,14 +55,14 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
         e.g. `docker build -t kpng:test -f Dockerfile .`  
 2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml` in the cloned repository  
 3. Deploy patu and kpng  
-    Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer all apply`   
+    Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer apply all`   
     Ensure the script doesn't result in any errors.  
 4. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready  
 
 
 
 #### REMOVE-ALL:  
-1. Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer all delete`    
+1. Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer delete all`    
    Ensure the script doesn't result in any errors.  
 
 
