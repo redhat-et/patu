@@ -54,8 +54,7 @@ This script can be run as `../scripts/impartLoad.sh <IP of concern> <Number>`. S
 ### Execution steps
 1. Create a new namespace  
 `kubectl create namespace iperf-test`
-2. Create server pod  
-a.   
+2. Create server pod    
 ```
 rm -f pod-iperf-server.yaml 
 cat >> pod-iperf-server.yaml <<EOL
@@ -74,7 +73,8 @@ spec:
         protocol: TCP
 EOL
 ```
-b.  
+
+
 Execute the following commands:
 ```
 kubectl delete -f pod-iperf-server.yaml
@@ -82,11 +82,11 @@ kubectl create -f pod-iperf-server.yaml
 ```
 
 3. Create client Pod
-a.
 ```
 export IPERF_SERVER=`oc get pods iperf-server -n iperf-test -o=jsonpath="{['status.podIP']}"`
 ```
-b.
+
+
 ```    command:
       - iperf3
       - "-c"
@@ -109,7 +109,7 @@ spec:
 EOL
 ```
 
-c.
+
 Execute the following commands:
 ```
 kubectl delete -f pod-iperf-client.yaml
