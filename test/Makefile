@@ -9,5 +9,8 @@ install-kind:
 run-e2e:
 	./scripts/test-e2e.sh -i $(IP_FAMILY) -b $(BACKEND) -c -n 1
 	cd e2e; \
-	ginkgo -r -v; \
+	go test -timeout=0 -v . \
+            -ginkgo.v \
+            -provider skeleton \
+            -kubeconfig $(KUBECONFIG)
 	cd ..
