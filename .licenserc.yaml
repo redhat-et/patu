@@ -32,4 +32,5 @@ header:
     - 'go.mod'
     - 'Dockerfile'
     - '**/*.yaml'
+    - '**/*.yml'
     - '.clang-format'
