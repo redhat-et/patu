@@ -27,15 +27,10 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
 
 
 #### Install KPNG  
-1. Build KPNG  
-    Repository: https://github.com/kubernetes-sigs/kpng  
-    Cmd: `docker build -t <imagename:tag> -f Dockerfile .`    
-        e.g. `docker build -t kpng:test -f Dockerfile .`  
-2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml` in the cloned repository  
-3. Deploy kpng  
+1. Deploy kpng  
     Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer apply kpng`   
     Ensure the script doesn't result in any errors.  
-4. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready 
+2. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready 
 
 
 #### Remove KPNG  
@@ -49,15 +44,10 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
 
 
 #### INSTALL-ALL:  
-1. Build KPNG  
-    Repository: https://github.com/kubernetes-sigs/kpng  
-    Cmd: `docker build -t <imagename:tag> -f Dockerfile .`    
-        e.g. `docker build -t kpng:test -f Dockerfile .`  
-2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml` in the cloned repository  
-3. Deploy patu and kpng  
+1. Deploy patu and kpng  
     Execute this command: `<path-to-patu-repo>/patu/scripts/installer/patu-installer apply all`   
     Ensure the script doesn't result in any errors.  
-4. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready  
+2. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready  
 
 
 
@@ -74,25 +64,20 @@ Install kubernetes without kube-proxy  | Remove kube-proxy
 
 
 #### Install KPNG  
-1. Build KPNG  
-    Repository: https://github.com/kubernetes-sigs/kpng  
-    Cmd: `docker build -t <imagename:tag> -f Dockerfile .`    
-        e.g. `docker build -t kpng:test -f Dockerfile .`  
-2. Replace the placeholder `<imagename:tag>` with the selected imagename:tag in `./kpngebpf.yaml` in the cloned repository  
-3. Extract node name:  
+1. Extract node name:  
     ```
     (ip addr | awk '/inet/{print $2}' | awk -F/ '{print $1}') > /tmp/internal_ip.txt  
     local_node=$(kubectl get node -o wide | grep -f /tmp/internal_ip.txt | awk '{print $1}')
     ```
-4. Remove taints concerning control-plane, master:  
+2. Remove taints concerning control-plane, master:  
     `kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-`  
-5. Label node:  
+3. Label node:  
     `kubectl label node $local_node kube-proxy=kpng`  
-6. Create configmap:  
+4. Create configmap:  
     `kubectl create configmap kpng --namespace kube-system --from-file /etc/kubernetes/admin.conf`  
-7. Deploy kpng:
+5. Deploy kpng:
     `kubectl apply -f <path-to-patu-repo>/patu/hack.kubernetes/kpngebpf.yaml`  
-8. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready  
+6. Ensure status - All pods should be in running and ready state. Coredns pods should have IP from patu CIDR, KPNG pod should have 3 containers running and ready  
 
 
 #### Remove KPNG  

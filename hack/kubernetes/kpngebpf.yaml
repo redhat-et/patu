@@ -61,7 +61,7 @@ spec:
           mountPropagation: Bidirectional
         - name: bpf-log
           mountPath: /tracing
-      - image: <imagename:tag>
+      - image: ghcr.io/redhat-et/kpng:latest
         imagePullPolicy: IfNotPresent
         env:
         - name: GOLANG_PROTOBUF_REGISTRATION_CONFLICT
@@ -77,7 +77,7 @@ spec:
         - --kubeconfig=/var/lib/kpng/admin.conf
         - to-api
         - --listen=unix:///k8s/proxy.sock
-      - image: <imagename:tag>
+      - image: ghcr.io/redhat-et/kpng:latest
         imagePullPolicy: IfNotPresent
         env:
         - name: GOLANG_PROTOBUF_REGISTRATION_CONFLICT
