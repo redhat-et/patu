@@ -6,7 +6,7 @@ The tests have been done on 2 core CPU, 4G RAM VM with the ubuntu 22.04 OS, 5.15
 ## NMON  
 
 To have a detailed view of the CPU, memory consumption throughout a test- we can use `nmon`.Nmon is a performance monitor for Linux, which dumps the data of concern in a file; while can be viewed in form of graphs in a html page.    
-1. To install nmon (install on k8s control-plane noe) - `apt install nmon`.    
+1. To install nmon (install on k8s control-plane node) - `apt install nmon`.    
 2. Install latest zip of nmonchart from http://nmon.sourceforge.net/pmwiki.php?n=Site.Nmonchart . This is used to convert the data collected using nmon into a viewable html page. This can be downloaded even outside the machine containing the cluster.    
 
 
@@ -43,10 +43,10 @@ done
 
 ## Description about scenario based test scripts
 
-1. During the preliminary testing, ../../scripts/perf-test/scaleTest.sh script has been used to test the extent upto which a certain deployment can be scaled with the given constraints and to inflict changes to observe effect of scaling on CNI resource consumption. 
-2. Script called ../../scripts/perf-test/impartLoad.sh is used to continuously curl to a certain IP and get the responses iterated into a file. This file helps to determine the number of calls served successfully with HTTP response code 200; and hence calculate statistics like calls handled per second.   
-This script can be run as `../../scripts/perf-test/impartLoad.sh <IP of concern> <Number>`. Second argument enables this script to handle multiple threads concurrently. If the script is triggered say 3 times, all three threads will put in their data in separate files.  
-3. To calculate the latency of response of `ping` while testing pos-to-pod communication, ../../scripts/perf-test/chkPingLatency.sh has been created. This script, creates a pod in the default namespace with ping capability and then triggers a continuous ping and forwards that data into a file. This script when terminated, feeds in the average latency value in the file as well.  
+1. During the preliminary testing, [scaleTest.sh](scaleTest.sh) script has been used to test the extent upto which a certain deployment can be scaled with the given constraints and to inflict changes to observe effect of scaling on CNI resource consumption. 
+2. Script called [impartLoad.sh](impartLoad.sh) is used to continuously curl to a certain IP and get the responses iterated into a file. This file helps to determine the number of calls served successfully with HTTP response code 200; and hence calculate statistics like calls handled per second.   
+This script is present in `/patu/scripts/perf-test`, and can be run as `./impartLoad.sh <IP of concern> <Number>`. Second argument enables this script to handle multiple threads concurrently. If the script is triggered say 3 times, all three threads will put in their data in separate files.  
+3. To calculate the latency of response of `ping` while testing pos-to-pod communication, [chkPingLatency.sh](chkPingLatency.sh) has been created. This script, creates a pod in the default namespace with ping capability and then triggers a continuous ping and forwards that data into a file. This script when terminated, feeds in the average latency value in the file as well.  
 
 
 ## iperf3 testing
