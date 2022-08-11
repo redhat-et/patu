@@ -23,42 +23,48 @@
 # apply kpng - deploys clusterip svc implementation, delete kpng - removes kpng
 # apply all - deploy cni, kpng ; delete all - remove cni, kpng
 
+KUBECONFIG=${KUBECONFIG:="/etc/kubernetes/admin.conf"}
+
 arg=$1
 opt=$2
 
 (ip addr | awk '/inet/{print $2}' | awk -F/ '{print $1}') > /tmp/internal_ip.txt
 local_node=$(kubectl get node -o wide | grep -f /tmp/internal_ip.txt | awk '{print $1}')
 
-if [[ "$arg" != "apply"  &&  "$arg" != "delete" ]] || [[ "$opt" != "cni"  &&  "$opt" != "kpng"  &&  "$opt" != "all" ]]
-then
- echo -e "Usage details:\nRun as ./patu-installer <COMMAND> <OPTION>\nCOMMAND: apply | delete\nOPTION: cni | kpng | all"
-elif [ "$arg" = "apply" ]
-then
-    if [ "$opt" = "all" ]
-    then
+file_exists() {
+    local f="$1"
+    stat $f &>/dev/null
+}
+
+if ! file_exists ${KUBECONFIG}; then
+    echo -e "\nkubeconfig not found at ${KUBECONFIG}. Please set it using 'export KUBECONFIG=/path/to/config'\n"
+    exit 1
+fi
+
+if [[ "$arg" != "apply" && "$arg" != "delete" ]] || [[ "$opt" != "cni" && "$opt" != "kpng" && "$opt" != "all" ]]; then
+    echo -e "Usage details:\nRun as ./patu-installer <COMMAND> <OPTION>\nCOMMAND: apply | delete\nOPTION: cni | kpng | all"
+elif [ "$arg" = "apply" ]; then
+    if [ "$opt" = "all" ]; then
         kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
         kubectl apply -f patu/deploy/patu.yaml
         kubectl label node $local_node kube-proxy=kpng
-        kubectl create configmap kpng --namespace kube-system --from-file /etc/kubernetes/admin.conf
+        kubectl create configmap kpng --namespace kube-system --from-file ${KUBECONFIG}
         kubectl apply -f patu/hack/kubernetes/kpngebpf.yaml
-    elif [ "$opt" = "cni" ]
-    then
+    elif [ "$opt" = "cni" ]; then
         kubectl apply -f patu/deploy/patu.yaml
     else
         kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
         kubectl label node $local_node kube-proxy=kpng
-        kubectl create configmap kpng --namespace kube-system --from-file /etc/kubernetes/admin.conf
+        kubectl create configmap kpng --namespace kube-system --from-file ${KUBECONFIG}
         kubectl apply -f patu/hack/kubernetes/kpngebpf.yaml
     fi
 else
-    if [ "$opt" = "all" ]
-    then
+    if [ "$opt" = "all" ]; then
         kubectl delete -f patu/hack/kubernetes/kpngebpf.yaml
         kubectl delete cm kpng -n kube-system
         kubectl label node $local_node kube-proxy-
         kubectl delete -f patu/deploy/patu.yaml
-    elif [ "$opt" = "cni" ]
-    then
+    elif [ "$opt" = "cni" ]; then
         kubectl delete -f patu/deploy/patu.yaml
     else
         kubectl delete -f patu/hack/kubernetes/kpngebpf.yaml
