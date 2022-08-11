@@ -415,6 +415,7 @@ function create_cluster() {
     #   arg2: IP family                                                       #
     #   arg3: artifacts directory                                             #
     #   arg4: ci_mode                                                         #
+    #   arg5: backend
     ###########################################################################
     #    [ $# -eq 4 ]
     #    if_error_exit "Wrong number of arguments to ${FUNCNAME[0]}"
@@ -423,6 +424,7 @@ function create_cluster() {
     local ip_family=${2}
     local artifacts_directory=${3}
     local ci_mode=${4}
+    local backend=${5}
 
     # Get rid of any old cluster with the same name.
     if kind get clusters | grep -q "${cluster_name}" &>/dev/null; then
@@ -450,39 +452,53 @@ function create_cluster() {
         apiServer_extra_args="${apiServer_extra_args}\"logging-format\": \"${CLUSTER_LOG_FORMAT}\""
     fi
 
-    echo -e "\nPreparing to setup ${cluster_name} cluster ..."
-    # create cluster
-    # create the config file
-    cat <<EOF >"${artifacts_directory}/kind-config.yaml"
-      kind: Cluster
-      apiVersion: kind.x-k8s.io/v1alpha4
-      name: patu
-      networking:
-        # ipFamily: ipv4
-        kubeProxyMode: "none"
-        # apiServerAddress: "127.0.0.1"
-        disableDefaultCNI: true
-        podSubnet: 10.200.0.0/16
-        #serviceSubnet: 10.300.0.0/16
-      nodes:
-        - role: control-plane
-          kubeadmConfigPatches:
-            - |
-              kind: InitConfiguration
-              nodeRegistration:
-                kubeletExtraArgs:
-                  node-labels: "kube-proxy=kpng"
-                  authorization-mode: "AlwaysAllow"
+    echo -e "\nPreparing to setup ${cluster_name}"
+
+    # Adjust the kind config based on the backend matrix
+    if [ "${backend}" == "kubeproxy" ]; then
+        echo -e "\nSetting up the cluster with a backend of ${backend}"
+        cat <<EOF >"${artifacts_directory}/kind-config.yaml"
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  ipFamily: ipv4
+  apiServerAddress: "127.0.0.1"
 EOF
+      fi
+
+    # Adjust the kind config based on the backend matrix
+    if [ "${backend}" == "kpng" ]; then
+        echo -e "\nSetting up the cluster with a backend of ${backend}"
+        cat <<EOF >"${artifacts_directory}/kind-config.yaml"
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: patu
+networking:
+  ipFamily: ipv4
+  kubeProxyMode: "none"
+  apiServerAddress: "127.0.0.1"
+  disableDefaultCNI: true
+  podSubnet: 10.200.0.0/16
+    serviceSubnet: 10.300.0.0/16
+  nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "kube-proxy=kpng"
+            authorization-mode: "AlwaysAllow"
+EOF
+    fi
 
     kind create cluster \
         --name "${cluster_name}" \
         --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
         --retain \
         --wait=1m \
-        "${kind_log_level}"
-    # TODO: enable KPNG
-    # "--config=${artifacts_directory}/kind-config.yaml"
+        "${kind_log_level}" \
+        "--config=${artifacts_directory}/kind-config.yaml"
     if_error_exit "cannot create kind cluster ${cluster_name}"
 
     # Patch kube-proxy to set the verbosity level
@@ -613,7 +629,7 @@ function create_infrastructure_and_run_tests() {
 
     echo "${cluster_name}"
 
-    create_cluster "${cluster_name}" "${ip_family}" "${artifacts_directory}" "${ci_mode}"
+    create_cluster "${cluster_name}" "${ip_family}" "${artifacts_directory}" "${ci_mode}" "${backend}"
     wait_until_cluster_is_ready "${cluster_name}" "${ci_mode}"
 
     echo "${cluster_name}" >"${e2e_dir}"/clustername

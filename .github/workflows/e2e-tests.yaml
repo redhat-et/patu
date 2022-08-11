@@ -55,7 +55,7 @@ jobs:
     - name: Run e2e tests
       run: |
         export "PATH=$HOME/work/patu/patu/test/temp/e2e/bin:$PATH"
-        make -C test IP_FAMILY=${{ matrix.ipFamily }} BACKEND=${{ matrix.backend }} run-e2e
+        make -C test IP_FAMILY=${{ matrix.ipFamily }} BACKEND=${{ matrix.backend }} KUBECONFIG=$HOME/.kube/config run-e2e
 
     - name: Export logs
       if: always()
