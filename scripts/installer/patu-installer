@@ -41,6 +41,14 @@ if ! file_exists ${KUBECONFIG}; then
     exit 1
 fi
 
+# kpng currently looks for a hardcoded file name of admin.conf
+KPNG_CONFIG_FILE="$(basename "${KUBECONFIG}")"
+KPNG_CONFIG_FILEPATH="$(dirname "${KUBECONFIG}")"
+if ! [ ${KPNG_CONFIG_FILE} = "admin.conf" ]; then
+    cp ${KUBECONFIG} "${KPNG_CONFIG_FILEPATH}/admin.conf"
+fi
+KPNG_CONFIG="${KPNG_CONFIG_FILEPATH}/admin.conf"
+
 if [[ "$arg" != "apply" && "$arg" != "delete" ]] || [[ "$opt" != "cni" && "$opt" != "kpng" && "$opt" != "all" ]]; then
     echo -e "Usage details:\nRun as ./patu-installer <COMMAND> <OPTION>\nCOMMAND: apply | delete\nOPTION: cni | kpng | all"
 elif [ "$arg" = "apply" ]; then
@@ -48,14 +56,14 @@ elif [ "$arg" = "apply" ]; then
         kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
         kubectl apply -f patu/deploy/patu.yaml
         kubectl label node $local_node kube-proxy=kpng
-        kubectl create configmap kpng --namespace kube-system --from-file ${KUBECONFIG}
+        kubectl create configmap kpng --namespace kube-system --from-file ${KPNG_CONFIG}
         kubectl apply -f patu/hack/kubernetes/kpngebpf.yaml
     elif [ "$opt" = "cni" ]; then
         kubectl apply -f patu/deploy/patu.yaml
     else
         kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
         kubectl label node $local_node kube-proxy=kpng
-        kubectl create configmap kpng --namespace kube-system --from-file ${KUBECONFIG}
+        kubectl create configmap kpng --namespace kube-system --from-file ${KPNG_CONFIG}
         kubectl apply -f patu/hack/kubernetes/kpngebpf.yaml
     fi
 else
