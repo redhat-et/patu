@@ -171,3 +171,48 @@ var _ = ginkgo.Describe("Validate pod to pod connectivity with a nginx deploymen
 		}
 	})
 })
+
+// This test validates pod to pod connectivity with an Internet service
+/* This test does the following:
+   1. Create a paused deployment with a curl binary available
+   2. Wait for the pause deployment to be available
+   3. Retrieve the pod from the curl deployment
+   4. Exec the pause pod and validate connectivity to the Internet service
+*/
+var _ = ginkgo.Describe("Validate egress traffic from a pod to an Internet service", func() {
+	f := newPrivelegedTestFramework("pod2internet-deployment")
+	curlImage := "alpine/curl:latest"
+	curlTimeout := 5
+	curlPort := "80"
+	inetSvc := "1.1.1.1"
+	curlDeployName := "e2e-curl-deployment"
+
+	ginkgo.It("Should validate pod to Internet connectivity", func() {
+
+		ginkgo.By("1. Create a paused deployment with a curl binary available")
+		curlDeploySpec := e2edeployment.NewDeployment(curlDeployName, 1,
+			map[string]string{"app": "curl"},
+			"e2e-curl",
+			curlImage,
+			appsv1.RollingUpdateDeploymentStrategyType)
+		curlDeploySpec.Spec.Template.Spec.Containers[0].Args = []string{"sleep", "infinity"}
+
+		curlDeploy, err := f.ClientSet.AppsV1().Deployments(f.Namespace.Name).Create(context.TODO(), curlDeploySpec, metav1.CreateOptions{})
+		framework.ExpectNoError(err)
+
+		ginkgo.By("2. Wait for the pause deployment to be available")
+		err = e2edeployment.WaitForDeploymentComplete(f.ClientSet, curlDeploy)
+		framework.ExpectNoError(err)
+
+		ginkgo.By("3. Retrieve the pod from the curl deployment")
+		curlPod, err := e2edeployment.GetPodsForDeployment(f.ClientSet, curlDeploy)
+		framework.ExpectNoError(err)
+
+		ginkgo.By("4. Exec the pause pod and validate connectivity to the Internet service")
+		cmd := curlConnectivity(inetSvc, curlPort, curlTimeout)
+		_, _, err = f.ExecCommandInContainerWithFullOutput(curlPod.Items[0].Name, "e2e-curl", cmd...)
+		if err != nil {
+			framework.Failf("Failed to curl the Internet service  %s: %v", inetSvc, err)
+		}
+	})
+})
