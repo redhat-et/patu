@@ -17,20 +17,34 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"os/exec"
+	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/test/e2e/framework"
 	admissionapi "k8s.io/pod-security-admission/api"
 )
 
+// newPrivelegedTestFramework creates a new ginkgo framework
 func newPrivelegedTestFramework(basename string) *framework.Framework {
 	f := framework.NewDefaultFramework(basename)
 	f.NamespacePodSecurityEnforceLevel = admissionapi.LevelPrivileged
 	return f
 }
 
-// Get the IP address of a pod in the specified namespace
+// runCommand runs the cmd and returns the combined stdout and stderr
+func runCommand(cmd ...string) (string, error) {
+	output, err := exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to run %q: %s (%s)", strings.Join(cmd, " "), err, output)
+	}
+	return string(output), nil
+}
+
+// getPodAddress Get the IP address of a pod in the specified namespace
 func getPodAddress(podName, namespace string) string {
 	podIP, err := framework.RunKubectl(namespace, "get", "pods", podName, "--template={{.status.podIP}}")
 	if err != nil {
@@ -39,8 +53,30 @@ func getPodAddress(podName, namespace string) string {
 	return podIP
 }
 
+// curlConnectivity Curls a target address and port
 func curlConnectivity(ip, port string, timeout int) []string {
 	curl := fmt.Sprintf("curl -g --connect-timeout %v http://%s", timeout, net.JoinHostPort(ip, port))
 	cmd := []string{"/bin/sh", "-c", curl}
 	return cmd
+}
+
+// getBpfList retrieve the bpf program list
+func getBpfList() string {
+	bpfOut, err := runCommand("sudo", "bpftool", "prog", "list")
+	if err != nil {
+		framework.Failf("failed to run bpftool cmd: %v", err)
+	}
+	return bpfOut
+}
+
+func checkDaemonStatus(f *framework.Framework, dsName, ns string) error {
+	ds, err := f.ClientSet.AppsV1().DaemonSets(ns).Get(context.TODO(), dsName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Could not get daemon set from v1")
+	}
+	desired, scheduled, ready := ds.Status.DesiredNumberScheduled, ds.Status.CurrentNumberScheduled, ds.Status.NumberReady
+	if desired != scheduled && desired != ready {
+		return fmt.Errorf("Error in daemon status. DesiredScheduled: %d, CurrentScheduled: %d, Ready: %d", desired, scheduled, ready)
+	}
+	return nil
 }

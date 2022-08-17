@@ -500,7 +500,6 @@ EOF
     # Copy installer script and deployment files for installer in e2e
     mkdir -p $HOME/work/patu/patu/test/e2e/patu/deploy
     cp $HOME/work/patu/patu/deploy/* $HOME/work/patu/patu/test/e2e/patu/deploy/
-    cp $HOME/work/patu/patu/scripts/installer/patu-installer $HOME/work/patu/patu/test/e2e/
 
     # Install Kubeproxy backend matrix
     if [ "${backend}" == "kubeproxy" ]; then
