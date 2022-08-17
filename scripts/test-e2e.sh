@@ -422,6 +422,7 @@ function create_cluster() {
     #   arg2: IP family                                                       #
     #   arg3: artifacts directory                                             #
     #   arg4: ci_mode                                                         #
+    #   arg5: backend                                                         #
     ###########################################################################
     #    [ $# -eq 4 ]
     #    if_error_exit "Wrong number of arguments to ${FUNCNAME[0]}"
@@ -430,6 +431,9 @@ function create_cluster() {
     local ip_family=${2}
     local artifacts_directory=${3}
     local ci_mode=${4}
+    local backend=${5}
+    e2e_dir=${e2e_dir:="$(pwd)/temp/e2e"}
+    bin_dir=${bin_dir:="${e2e_dir}/bin"}
 
     # Get rid of any old cluster with the same name.
     if kind get clusters | grep -q "${cluster_name}" &>/dev/null; then
@@ -458,43 +462,67 @@ function create_cluster() {
     fi
 
     echo -e "\nPreparing to setup ${cluster_name} cluster ..."
-    # create cluster
-    # create the config file
+
+    # create cluster and the kind cluster config file
     cat <<EOF >"${artifacts_directory}/kind-config.yaml"
-      kind: Cluster
-      apiVersion: kind.x-k8s.io/v1alpha4
-      name: patu
-      networking:
-        # ipFamily: ipv4
-        kubeProxyMode: "none"
-        # apiServerAddress: "127.0.0.1"
-        disableDefaultCNI: true
-        podSubnet: 10.200.0.0/16
-        #serviceSubnet: 10.300.0.0/16
-      nodes:
-        - role: control-plane
-          kubeadmConfigPatches:
-            - |
-              kind: InitConfiguration
-              nodeRegistration:
-                kubeletExtraArgs:
-                  node-labels: "kube-proxy=kpng"
-                  authorization-mode: "AlwaysAllow"
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: patu
+networking:
+  kubeProxyMode: "none"
+  apiServerAddress: "0.0.0.0"
+  disableDefaultCNI: true
+  podSubnet: 10.200.0.0/16
+  #serviceSubnet: 10.300.0.0/16
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "kube-proxy=kpng"
+            authorization-mode: "AlwaysAllow"
 EOF
 
-    kind create cluster \
-        --name "${cluster_name}" \
-        --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
-        --retain \
-        --wait=1m \
-        "${kind_log_level}"
-    # TODO: enable KPNG
-    # "--config=${artifacts_directory}/kind-config.yaml"
-    if_error_exit "cannot create kind cluster ${cluster_name}"
+    # Copy installer script and deployment files for installer
+    mkdir -p patu/deploy/
+    cp ../deploy/* patu/deploy/
+    cp ../scripts/installer/patu-installer ${bin_dir}
 
-    # Patch kube-proxy to set the verbosity level
-    kubectl patch -n kube-system daemonset/kube-proxy \
-        --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/command/-", "value": "--v='"${kind_cluster_log_level}"'" }]'
+    # Install Kubeproxy backend matrix
+    if [ "${backend}" = "kubeproxy" ]; then
+        kind create cluster \
+            --name "${cluster_name}" \
+            --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
+            --retain \
+            --wait=1m \
+            "${kind_log_level}"
+        if_error_exit "cannot create kind cluster ${cluster_name}"
+        # Patch kube-proxy to set the verbosity level
+        kubectl patch -n kube-system daemonset/kube-proxy \
+            --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/command/-", "value": "--v='"${kind_cluster_log_level}"'" }]'
+
+        # Install Patu using the installer
+        KUBECONFIG=${HOME}/.kube/config patu-installer apply cni
+        if_error_exit "Failed to install Patu"
+    fi
+
+    # Install KPNG backend matrix
+    if [ "${backend}" = "kpng" ]; then
+        kind create cluster \
+            --name "${cluster_name}" \
+            --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
+            --retain \
+            --wait=1m \
+            "${kind_log_level}"
+        "--config=${artifacts_directory}/kind-config.yaml"
+        if_error_exit "cannot create kind cluster ${cluster_name}"
+
+        # Install Patu using the installer
+        KUBECONFIG=${HOME}/.kube/config patu-installer apply all
+        if_error_exit "Failed to install Patu"
+    fi
 
     kind get kubeconfig --internal --name "${cluster_name}" >"${artifacts_directory}/kubeconfig.conf"
     kind get kubeconfig --name "${cluster_name}" >"${artifacts_directory}/${KUBECONFIG_TESTS}"
@@ -527,7 +555,7 @@ EOF
         echo "${fixed_coredns}"
         printf '%s' "${fixed_coredns}" | kubectl --context "${k8s_context}" apply -f -
     fi
-    # Install Patu
+
     kubectl apply -f ../deploy/patu.yaml
     # Wait on Patu to become ready
     kubectl --context "${k8s_context}" wait \
@@ -688,7 +716,7 @@ function create_infrastructure_and_run_tests() {
 
     echo "${cluster_name}"
 
-    create_cluster "${cluster_name}" "${ip_family}" "${artifacts_directory}" "${ci_mode}"
+    create_cluster "${cluster_name}" "${ip_family}" "${artifacts_directory}" "${ci_mode}" "${backend}"
     wait_until_cluster_is_ready "${cluster_name}" "${ci_mode}"
 
     echo "${cluster_name}" >"${e2e_dir}"/clustername
