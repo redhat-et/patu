@@ -415,7 +415,7 @@ function create_cluster() {
     #   arg2: IP family                                                       #
     #   arg3: artifacts directory                                             #
     #   arg4: ci_mode                                                         #
-    #   arg5: backend
+    #   arg5: backend                                                         #
     ###########################################################################
     #    [ $# -eq 4 ]
     #    if_error_exit "Wrong number of arguments to ${FUNCNAME[0]}"
@@ -462,7 +462,7 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
   ipFamily: ipv4
-  apiServerAddress: "127.0.0.1"
+  apiServerAddress: "0.0.0.0"
 EOF
       fi
 
@@ -476,11 +476,11 @@ name: patu
 networking:
   ipFamily: ipv4
   kubeProxyMode: "none"
-  apiServerAddress: "127.0.0.1"
+  apiServerAddress: "0.0.0.0"
   disableDefaultCNI: true
   podSubnet: 10.200.0.0/16
-    serviceSubnet: 10.300.0.0/16
-  nodes:
+  #serviceSubnet: 10.300.0.0/16
+nodes:
   - role: control-plane
     kubeadmConfigPatches:
       - |
@@ -492,14 +492,52 @@ networking:
 EOF
     fi
 
-    kind create cluster \
-        --name "${cluster_name}" \
-        --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
-        --retain \
-        --wait=1m \
-        "${kind_log_level}" \
+    # TODO: add an ENV option for deploying with the configuration file(s) locations
+    # Copy installer script and deployment files for installer
+    mkdir -p patu/deploy/
+    cp $HOME/work/patu/patu/deploy/* patu/deploy/
+    cp $HOME/work/patu/patu/scripts/installer/patu-installer ${bin_dir}
+    # Copy installer script and deployment files for installer in e2e
+    mkdir -p $HOME/work/patu/patu/test/e2e/patu/deploy
+    cp $HOME/work/patu/patu/deploy/* $HOME/work/patu/patu/test/e2e/patu/deploy/
+    cp $HOME/work/patu/patu/scripts/installer/patu-installer $HOME/work/patu/patu/test/e2e/
+
+    # Install Kubeproxy backend matrix
+    if [ "${backend}" == "kubeproxy" ]; then
+        echo -e "\n${backend} backend detected ..."
+        kind create cluster \
+            --name "${cluster_name}" \
+            --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
+            --retain \
+            --wait=1m \
+            "${kind_log_level}" \
+            "--config=${artifacts_directory}/kind-config.yaml"
+        if_error_exit "cannot create kind cluster ${cluster_name}"
+        # Patch kube-proxy to set the verbosity level
+        kubectl patch -n kube-system daemonset/kube-proxy \
+            --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/command/-", "value": "--v='"${kind_cluster_log_level}"'" }]'
+
+        # Install Patu using the installer
+        KUBECONFIG=${HOME}/.kube/config patu-installer apply cni
+        if_error_exit "Failed to install Patu"
+    fi
+
+    # Install KPNG backend matrix
+    if [ "${backend}" == "kpng" ]; then
+        echo -e "\n${backend} backend detected ..."
+        kind create cluster \
+            --name "${cluster_name}" \
+            --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
+            --retain \
+            --wait=1m \
+            "${kind_log_level}" \
         "--config=${artifacts_directory}/kind-config.yaml"
-    if_error_exit "cannot create kind cluster ${cluster_name}"
+        if_error_exit "cannot create kind cluster ${cluster_name}"
+
+        # Install Patu using the installer
+        KUBECONFIG=${HOME}/.kube/config patu-installer apply all
+        if_error_exit "Failed to install Patu"
+    fi
 
     # Patch kube-proxy to set the verbosity level
     kubectl patch -n kube-system daemonset/kube-proxy \
@@ -536,8 +574,7 @@ EOF
         echo "${fixed_coredns}"
         printf '%s' "${fixed_coredns}" | kubectl --context "${k8s_context}" apply -f -
     fi
-    # Install Patu
-    kubectl apply -f ../deploy/patu.yaml
+
     # Wait on Patu to become ready
     kubectl --context "${k8s_context}" wait \
         --for=condition=ready \
