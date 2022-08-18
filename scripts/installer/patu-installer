@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 # Copyright © 2022 Authors of Patu
 #
@@ -13,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-#!/bin/sh
 
 # This script allows for 3 kinds of options- each available with two commands:
 # Command can be apply | delete
