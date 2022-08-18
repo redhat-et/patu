@@ -491,7 +491,8 @@ EOF
     cp ../scripts/installer/patu-installer ${bin_dir}
 
     # Install Kubeproxy backend matrix
-    if [ "${backend}" = "kubeproxy" ]; then
+    if [ "${backend}" == "kubeproxy" ]; then
+        echo -e "\n${backend} backend detected ..."
         kind create cluster \
             --name "${cluster_name}" \
             --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
@@ -509,7 +510,8 @@ EOF
     fi
 
     # Install KPNG backend matrix
-    if [ "${backend}" = "kpng" ]; then
+    if [ "${backend}" == "kpng" ]; then
+        echo -e "\n${backend} backend detected ..."
         kind create cluster \
             --name "${cluster_name}" \
             --image "${KINDEST_NODE_IMAGE}":"${E2E_K8S_VERSION}" \
@@ -556,7 +558,6 @@ EOF
         printf '%s' "${fixed_coredns}" | kubectl --context "${k8s_context}" apply -f -
     fi
 
-    kubectl apply -f ../deploy/patu.yaml
     # Wait on Patu to become ready
     kubectl --context "${k8s_context}" wait \
         --for=condition=ready \
