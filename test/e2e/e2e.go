@@ -18,9 +18,8 @@ package e2e
 
 import (
 	"context"
-	"fmt"
-	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/onsi/ginkgo"
 	appsv1 "k8s.io/api/apps/v1"
@@ -36,30 +35,22 @@ const (
 	patuCgroupSockRecv = "patu_recvmsg4"
 )
 
-// runCommand runs the cmd and returns the combined stdout and stderr
-func runCommand(cmd ...string) (string, error) {
-	output, err := exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("failed to run %q: %s (%s)", strings.Join(cmd, " "), err, output)
-	}
-	return string(output), nil
-}
-
-// This test validates that the patu bpf programs are loaded
+// This test Validates patu ebpf programs are loaded and unloaded with installation, deletion and re-installation
 /* This test does the following:
    1. Verify sock_ops named patu_sockops program is loaded
    2. Verify sk_msg program named patu_skmsg is loaded
    3. Verify cgroup_sock_addr program named patu_sendmsg4 is loaded
    4. Verify cgroup_sock_addr program named patu_recvmsg4 is loaded
+   5. Uninstall Patu using the installer
+   6. Verify none of the Patu bpf programs are loaded after uninstallation
+   7. Reinstall Patu using the installer
+   8. Verify all of the Patu bpf programs are loaded after re-installation
 */
-var _ = ginkgo.Describe("Validate patu ebpf programs are loaded", func() {
+var _ = ginkgo.Describe("Validate patu ebpf programs are loaded and unloaded with installation, deletion and re-installation", func() {
 	var bpfOut string
-	var err error
+	f := newPrivelegedTestFramework("bpf-installer-deployment")
 	ginkgo.BeforeEach(func() {
-		bpfOut, err = runCommand("sudo", "bpftool", "prog", "list")
-		if err != nil {
-			framework.Failf("failed to run bpftool cmd: %v", err)
-		}
+		bpfOut = getBpfList()
 	})
 
 	ginkgo.It("Verify Patu is loaded properly by examining the loaded bpf programs", func() {
@@ -82,6 +73,57 @@ var _ = ginkgo.Describe("Validate patu ebpf programs are loaded", func() {
 		ginkgo.By("4. Verify cgroup_sock_addr program named patu_recvmsg4 is loaded")
 		if !strings.Contains(bpfOut, patuCgroupSockRecv) {
 			framework.Failf("The program %s was not found\n", patuCgroupSockRecv)
+		}
+
+		ginkgo.By("5. Uninstall Patu using the installer")
+		patuDeleteStdOut, err := runCommand("patu-installer", "delete", "cni")
+		if err != nil {
+			framework.Failf("failed to run patu uninstall: %v", err)
+		}
+		framework.Logf("Patu uninstall output: %s", patuDeleteStdOut)
+		time.Sleep(15 * time.Second)
+
+		ginkgo.By("6. Verify none of the Patu bpf programs are loaded after uninstallation")
+		// reread loaded bpf programs
+		bpfOut = getBpfList()
+		if strings.Contains(bpfOut, patuSockOps) {
+			framework.Failf("The program %s was not unloaded by the uninstaller\n", patuSockOps)
+		}
+		if strings.Contains(bpfOut, patuSkMsg) {
+			framework.Failf("The program %s was not unloaded by the uninstaller\n", patuSkMsg)
+		}
+		if strings.Contains(bpfOut, patuCgroupSockSend) {
+			framework.Failf("The program %s was not unloaded by the uninstaller\n", patuCgroupSockSend)
+		}
+		if strings.Contains(bpfOut, patuCgroupSockRecv) {
+			framework.Failf("The program %s was not unloaded by the uninstaller\n", patuCgroupSockRecv)
+		}
+
+		ginkgo.By("7. Reinstall Patu using the installer")
+		patuInstallStdOut, err := runCommand("patu-installer", "apply", "cni")
+		if err != nil {
+			framework.Failf("failed to run patu-installer: %v", err)
+		}
+		framework.Logf("Patu install output: %s", patuInstallStdOut)
+		time.Sleep(15 * time.Second)
+		// verify the daemonset is loaded
+		err = checkDaemonStatus(f, "patu", "kube-system")
+		framework.ExpectNoError(err)
+
+		ginkgo.By("8. Verify all of the Patu bpf programs are loaded after re-installation")
+		// reread loaded bpf programs
+		bpfOut = getBpfList()
+		if !strings.Contains(bpfOut, patuSockOps) {
+			framework.Failf("The program %s was not reloaded by the installer\n", patuSockOps)
+		}
+		if !strings.Contains(bpfOut, patuSkMsg) {
+			framework.Failf("The program %s was not reloaded by the installer\n", patuSkMsg)
+		}
+		if !strings.Contains(bpfOut, patuCgroupSockSend) {
+			framework.Failf("The program %s was not reloaded by the installer\n", patuCgroupSockSend)
+		}
+		if !strings.Contains(bpfOut, patuCgroupSockRecv) {
+			framework.Failf("The program %s was not reloaded by the installer\n", patuCgroupSockRecv)
 		}
 	})
 })
