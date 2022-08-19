@@ -492,14 +492,15 @@ nodes:
 EOF
     fi
 
-    # TODO: add an ENV option for deploying with the configuration file(s) locations
-    # Copy installer script and deployment files for installer
-    mkdir -p patu/deploy/
-    cp $HOME/work/patu/patu/deploy/* patu/deploy/
+    # Copy installer script to the runner artifact bin dir
     cp $HOME/work/patu/patu/scripts/installer/patu-installer ${bin_dir}
     # Copy installer script and deployment files for installer in e2e
+    # This also tests the default filepath installation in e2e rather
+    # than via ENVs in the kind cluster setup in CI
     mkdir -p $HOME/work/patu/patu/test/e2e/patu/deploy
+    mkdir -p $HOME/work/patu/patu/test/e2e/patu/hack/kubernetes/
     cp $HOME/work/patu/patu/deploy/* $HOME/work/patu/patu/test/e2e/patu/deploy/
+    cp $HOME/work/patu/patu/hack/kubernetes/* $HOME/work/patu/patu/test/e2e/patu/hack/kubernetes/
 
     # Install Kubeproxy backend matrix
     if [ "${backend}" == "kubeproxy" ]; then
@@ -516,8 +517,11 @@ EOF
         kubectl patch -n kube-system daemonset/kube-proxy \
             --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/command/-", "value": "--v='"${kind_cluster_log_level}"'" }]'
 
-        # Install Patu using the installer
-        KUBECONFIG=${HOME}/.kube/config patu-installer apply cni
+        # Install Patu CNI using the installer
+        KUBECONFIG=${HOME}/.kube/config \
+        PATU_CONFIG=$HOME/work/patu/patu/deploy/patu.yaml \
+        KPNG_CONFIG=$HOME/work/patu/patu/hack/kubernetes/kpngebpf.yaml \
+        patu-installer apply cni
         if_error_exit "Failed to install Patu"
     fi
 
@@ -533,8 +537,11 @@ EOF
         "--config=${artifacts_directory}/kind-config.yaml"
         if_error_exit "cannot create kind cluster ${cluster_name}"
 
-        # Install Patu using the installer
-        KUBECONFIG=${HOME}/.kube/config patu-installer apply all
+        # Install Patu and KPNG using the installer
+        KUBECONFIG=${HOME}/.kube/config \
+        PATU_CONFIG=$HOME/work/patu/patu/deploy/patu.yaml \
+        KPNG_CONFIG=$HOME/work/patu/patu/hack/kubernetes/kpngebpf.yaml \
+        patu-installer apply all
         if_error_exit "Failed to install Patu"
     fi
 
