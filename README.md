@@ -1,54 +1,114 @@
 # [Patu](https://en.wikipedia.org/wiki/Patu_digua)
 
-Lightweight networking solution for Container Orchestrators managing container lifecycle on resource constrained compute devices, such as Edge Devices.
+Patu is a lightweight networking solution for low footprint (CPU, Memory, Disk) container orchestrators targeted to manage resource constrained compute devices, such as Edge Devices.
 
-## The Challenge
-
-Containers to deploy workload on Edge devices is a new reality. Microshift, K3S, RHEL for Edge, RHEL for Automotive are some of the initiatives that RedHat is working actively to spread the reach of containers to the Edge devices. Generally most of the edge devices have limited compute resources (CPU and Memory), and users would prefer to use maximum compute resources to execute the workload deployed on the device.
-
-Container networking stack is one of the major contenders for the device’s compute resources. As the packet traffic requires forwarding increases, it will cost more compute resources, and eventually workloads need to contend for compute resources with the networking stack to execute. This requires that the compute cost for per packet forwarding must be absolutely optimal to make most compute resources available for workload deployment.
-
-Most of the large scale container orchestrators networking solutions (e.g kubernetes CNI) have a significant compute cost, because their architecture supports planet scale and the solutions are of very dynamic nature. The scope of these networking solutions is to provide networking within a single compute node as well as to provide networking across multiple compute nodes, and that makes these solutions more complex and compute intensive. On the contrary, Edge devices are mostly isolated devices running the workload that doesn’t require significant cross device communication.That significantly reduces the functional requirements for the networking solutions when it comes to edge devices.
-
-Using the large scale container orchestrator CNI’s for edge devices incur unnecessary additional costs (mostly due to their complex control plane) on the critical compute resources of the edge device that can be used to deploy more workload on the device. Building a solution targeted to the networking requirements of the  edge devices can lead to simpler control and data plane solution that is less compute intensive.
-
-## The Goal
-
-With most of the existing container networking solutions, the packet from workload container needs to go through socket layer, tcp/ip layer and ethernet layer, and then it’s injected in the datapath running at the node level, that forwards the traffic to the destination workload container. At the destination workload container, the packet again needs to go through the networking layer again. This incurs the cost of encapsulation and decapsulation of the packet at each networking layer (socket, ip, ethernet), when the packet doesn’t even need to leave the node. This double traversal through the networking layers is unnecessary and costly when it comes to edge devices with limited compute resources.
-
-This project is an attempt to build a CNI using a new operating system kernel technology named [eBPF](https://ebpf.io/what-is-ebpf) (extended Berkeley Packet Filter) with the goal to enable container networking with the optimum per packet compute cost. eBPF allows users to write kernel programs to intercept networking packets at multiple levels in the operating system networking stack. The high level idea of the CNI is to operate at the socket layer for the local traffic, leverage eBPF [xdp](https://developers.redhat.com/blog/2021/04/01/get-started-with-xdp) for ingress. Packet from the source container will be directly intercepted at the socket layer of the container and forwarded to the destination workload container's socket layer using the eBPF programs. This avoids multiple packet traversal through multiple networking layers, provides better latency and also requires less compute resources as packet doesn’t have to go through multiple layers of encapsulation and decapsulation. The control plane will enable the socket redirection across all the containers deployed within the worker node and will enable/disable socket redirection according to the container lifecycle.
+# Motivation
+It's an attempt to build CNI that is driven by the Edge related use cases and targeted for resource constraint deployment environment. Please read [here](./docs/Challange-and-goal.md) for more details about the challenge and the goal.
 
 ## Deploying Patu
 
-### Kubernetes
+Currently Patu CNI supports Pod-to-Pod networking and Cluster IP implementation. Pod-to-Pod networking is enabled through Bridge CNI and eBPF based socket redirection. Cluster IP support is provided through the [Kube Proxy Next Generation](https://github.com/kubernetes-sigs/kpng) eBPF based backend. If you want to use Patu CNI binary with the existing kube-proxy please refer to the instructions in `/hack` directory. Node Port service and Networking Policy support is currently under development and will land soon.
 
-#### CNI Deployment:
-Easiest way to play with Patu CNI is to deploy a single node kubernetes with `--pod-network-cidr=10.200.0.0/16`. Currently Patu CNI is tested with kernel version 5.15 (specifically Ubuntu 22.04), so we would recommend to create a VM with Ubuntu 22.04 distribution and install Kubernetes.
+
+### Kubernetes
+These instructions are to deploy Patu CNI with single node kubernetes, but if you are looking for detail instructions to setup Patu CNI to different environment (Kind, Microshift), please refer to the relevant documents in the `./hack` directory.
+
+
+#### CNI Deployment
+Easiest way to deploy and play with Patu CNI is to deploy a single node kubernetes with `--pod-network-cidr=10.200.0.0/16`. Currently Patu CNI is tested with kernel version 5.15 (specifically Ubuntu 22.04), so we would recommend to create a Ubuntu 22.04 VM/server as your playground. 
+
+
+* Install single node kubernetes 
+
+  <pre>
+  kubeadm init  --upload-certs --pod-network-cidr=10.200.0.0/16 --v=6 --skip-phases=addon/kube-proxy
+  </pre>
+  
+  Pod's state before CNI deployment
+
+  <pre>
+  # kubectl get pods -A
+  NAMESPACE     NAME                                     READY   STATUS    RESTARTS      AGE
+  kube-system   coredns-6d4b75cb6d-dhv78                 0/1     Pending   0             4s
+  kube-system   coredns-6d4b75cb6d-wfwbh                 0/1     Pending   0             4s
+  kube-system   etcd-kubernetes2204                      1/1     Running   715           15s
+  kube-system   kube-apiserver-kubernetes2204            1/1     Running   2 (15m ago)   15s
+  kube-system   kube-controller-manager-kubernetes2204   1/1     Running   2             15s
+  kube-system   kube-scheduler-kubernetes2204            1/1     Running   2             15s
+  </pre>
 
 * Clone the patu repo.
-* Apply the `patu.yaml` present in `deploy ` directory. 
-  ``` 
-  kubectl apply -f <path-to-patu-repo>/deploy/patu.yaml
-  ```
-* If you don't prefer to clone the repo, you can copy the yaml from `patu/deploy/patu.yaml` locally and apply it.
 
-#### Verification:
-Once you deploy patu, coredns pods should be in the running state and the pods should have IP address from the provide cidr.
+  <pre>
+  git clone https://github.com/redhat-et/patu.git
+  </pre>
+
+* Deploy the Patu CNI
+
+  <pre>
+  ./scripts/installer/patu-installer apply all
+  </pre>
+
+  Installer will deploy the patu manifest as well as KPNG eBPF manifest. Pod's status after CNI deployment
+
+  <pre>
+  # kubectl get pods -A -o wide
+  NAMESPACE     NAME                                     READY   STATUS    RESTARTS      AGE   IP                NODE             NOMINATED NODE   READINESS GATES
+  <b>kube-system   coredns-6d4b75cb6d-dhv78                 1/1     Running   0             38m   10.200.0.3        kubernetes2204   <none>           <none></b>
+  <b>kube-system   coredns-6d4b75cb6d-wfwbh                 1/1     Running   0             38m   10.200.0.2        kubernetes2204   <none>           <none></b>
+  kube-system   etcd-kubernetes2204                      1/1     Running   715           38m   192.168.122.229   kubernetes2204   <none>           <none>
+  <b>kube-system   kpng-sqwts                               3/3     Running   0             69s   192.168.122.229   kubernetes2204   <none>           <none></b>
+  kube-system   kube-apiserver-kubernetes2204            1/1     Running   2 (54m ago)   38m   192.168.122.229   kubernetes2204   <none>           <none>
+  kube-system   kube-controller-manager-kubernetes2204   1/1     Running   2             38m   192.168.122.229   kubernetes2204   <none>           <none>
+  kube-system   kube-scheduler-kubernetes2204            1/1     Running   2             38m   192.168.122.229   kubernetes2204   <none>           <none>
+  <b>kube-system   patu-jtw85                               1/1     Running   0             70s   192.168.122.229   kubernetes2204   <none>           <none></b>
+  </pre>
+
+#### Verification
+Once you deploy patu, coredns pods should be in the running state and should have IP address from the provide cidr.
 On your kubernetes node, install the bpftool (ensure you install the tool for the kernel version currently running), and run the following command 
-```
-# bpftool prog list | grep patu
-2927: cgroup_sock_addr  name patu_connect4  tag 226d8967214ee349  gpl
-2931: cgroup_sock_addr  name patu_sendmsg4  tag d439a92f479811d9  gpl
-2935: cgroup_sock_addr  name patu_recvmsg4  tag 06b0a415da0c17e5  gpl
-2939: sock_ops  name patu_sockops  tag b800a2e173b7d69d  gpl
-2943: sk_skb  name patu_skskb  tag 3dedccc91281ae84  gpl
-```
 
-#### Workload Deployment:
+<pre>
+#bpftool prog list
+...
+...
+393: cgroup_sock_addr  name <b>sock4_connect</b>  tag 59372233301aea77  gpl
+	loaded_at 2022-08-22T19:08:10+0000  uid 0
+	xlated 1000B  jited 625B  memlock 4096B  map_ids 28,29
+	btf_id 102
+397: sock_ops  name <b>patu_sockops</b>  tag a11096f06c210cab  gpl
+	loaded_at 2022-08-22T19:08:11+0000  uid 0
+	xlated 1248B  jited 727B  memlock 4096B  map_ids 31
+	btf_id 108
+401: sk_msg  name <b>patu_skmsg</b>  tag 6736c050a3a25de2  gpl
+	loaded_at 2022-08-22T19:08:12+0000  uid 0
+	xlated 952B  jited 595B  memlock 4096B  map_ids 31
+	btf_id 114
+405: cgroup_sock_addr  name <b>patu_sendmsg4</b>  tag d439a92f479811d9  gpl
+	loaded_at 2022-08-22T19:08:13+0000  uid 0
+	xlated 336B  jited 203B  memlock 4096B
+	btf_id 120
+409: cgroup_sock_addr  name <b>patu_recvmsg4</b>  tag 06b0a415da0c17e5  gpl
+	loaded_at 2022-08-22T19:08:13+0000  uid 0
+	xlated 336B  jited 203B  memlock 4096B
+	btf_id 126
+  ...
+  ...
+  </pre>
+
+#### CNI Cleanup
+
+  <pre>
+  ./scripts/installer/patu-installer delete all
+  </pre>
+
+  It will remove all the resources deployed through Patu and KPNG manifest. 
+
+#### Workload Deployment
 *Notes: Given that Patu CNI is targeted for single node, you need to remove the control-plane & master taint from the node to deploy any workload.*
-```
+<pre>
 kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-
-```
+</pre>
 
 ### Supported Kubernetes Platforms
 
