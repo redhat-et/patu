@@ -35,8 +35,8 @@
 # ./patu-installer apply all
 
 KUBECONFIG=${KUBECONFIG:="/etc/kubernetes/admin.conf"}
-PATU_CONFIG=${PATU_CONFIG:="patu/deploy/patu.yaml"}
-KPNG_CONFIG=${KPNG_CONFIG:="patu/hack/kubernetes/kpngebpf.yaml"}
+PATU_CONFIG=${PATU_CONFIG:="deploy/patu.yaml"}
+KPNG_CONFIG=${KPNG_CONFIG:="hack/kubernetes/kpngebpf.yaml"}
 
 arg=$1
 opt=$2
@@ -59,7 +59,7 @@ if ! file_exists ${PATU_CONFIG}; then
     exit 1
 fi
 if ! file_exists ${KPNG_CONFIG}; then
-    echo -e "\npatu.yaml not found at ${KPNG_CONFIG}. Please set it using 'export KPNG_CONFIG=/path/to/kpngebpf.yaml'\n"
+    echo -e "\nkpngebpf.yaml not found at ${KPNG_CONFIG}. Please set it using 'export KPNG_CONFIG=/path/to/kpngebpf.yaml'\n"
     exit 1
 fi
 

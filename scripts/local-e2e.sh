@@ -485,10 +485,14 @@ nodes:
             authorization-mode: "AlwaysAllow"
 EOF
 
-    # Copy installer script and deployment files for installer
-    mkdir -p patu/deploy/
-    cp ../deploy/* patu/deploy/
-    cp ../scripts/installer/patu-installer ${bin_dir}
+    # Copy installer script to the bin dir to add it to the shells path
+    cp installer/patu-installer ${bin_dir}
+
+    # Copy installer script and deployment files for installer in e2e
+    mkdir -p ../test/e2e/deploy
+    mkdir -p ../test/e2e/hack/kubernetes/
+    cp ../deploy/* ../test/e2e/deploy
+    cp ../hack/kubernetes/* ../test/e2e/hack/kubernetes/
 
     # Install Kubeproxy backend matrix
     if [ "${backend}" == "kubeproxy" ]; then
@@ -505,8 +509,10 @@ EOF
             --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/command/-", "value": "--v='"${kind_cluster_log_level}"'" }]'
 
         # Install Patu using the installer
+        pushd ../
         KUBECONFIG=${HOME}/.kube/config patu-installer apply cni
         if_error_exit "Failed to install Patu"
+        popd
     fi
 
     # Install KPNG backend matrix
@@ -522,8 +528,10 @@ EOF
         if_error_exit "cannot create kind cluster ${cluster_name}"
 
         # Install Patu using the installer
+        pushd ../
         KUBECONFIG=${HOME}/.kube/config patu-installer apply all
         if_error_exit "Failed to install Patu"
+        popd
     fi
 
     kind get kubeconfig --internal --name "${cluster_name}" >"${artifacts_directory}/kubeconfig.conf"
