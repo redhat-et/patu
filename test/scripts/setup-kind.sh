@@ -497,10 +497,10 @@ EOF
     # Copy installer script and deployment files for installer in e2e
     # This also tests the default filepath installation in e2e rather
     # than via ENVs in the kind cluster setup in CI
-    mkdir -p $HOME/work/patu/patu/test/e2e/patu/deploy
-    mkdir -p $HOME/work/patu/patu/test/e2e/patu/hack/kubernetes/
-    cp $HOME/work/patu/patu/deploy/* $HOME/work/patu/patu/test/e2e/patu/deploy/
-    cp $HOME/work/patu/patu/hack/kubernetes/* $HOME/work/patu/patu/test/e2e/patu/hack/kubernetes/
+    mkdir -p $HOME/work/patu/patu/test/e2e/deploy
+    mkdir -p $HOME/work/patu/patu/test/e2e/hack/kubernetes/
+    cp $HOME/work/patu/patu/deploy/* $HOME/work/patu/patu/test/e2e/deploy/
+    cp $HOME/work/patu/patu/hack/kubernetes/* $HOME/work/patu/patu/test/e2e/hack/kubernetes/
 
     # Install Kubeproxy backend matrix
     if [ "${backend}" == "kubeproxy" ]; then
