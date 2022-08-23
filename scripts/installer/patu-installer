@@ -41,13 +41,17 @@ KPNG_CONFIG=${KPNG_CONFIG:="hack/kubernetes/kpngebpf.yaml"}
 arg=$1
 opt=$2
 
-(ip addr | awk '/inet/{print $2}' | awk -F/ '{print $1}') > /tmp/internal_ip.txt
-local_node=$(kubectl get node -o wide | grep -f /tmp/internal_ip.txt | awk '{print $1}')
-
 file_exists() {
     local f="$1"
     stat $f &>/dev/null
 }
+
+# Retrieve and store the control-plane node name in a single node cluster
+control_plane_node=$(kubectl get nodes -l 'node-role.kubernetes.io/control-plane' -o custom-columns=NAME:.metadata.name --no-headers)
+if [ -z "$control_plane_node" ]; then
+    echo -e "\n\$control_plane_node is empty, unable to determine the kubernetes node name with the command: kubectl get nodes -l 'node-role.kubernetes.io/control-plane' -o custom-columns=NAME:.metadata.name --no-headers"
+    exit 1
+fi
 
 # Verify config and yaml files exist
 if ! file_exists ${KUBECONFIG}; then
@@ -76,16 +80,16 @@ if [[ "$arg" != "apply" && "$arg" != "delete" ]] || [[ "$opt" != "cni" && "$opt"
     echo -e "Usage details:\nRun as ./patu-installer <COMMAND> <OPTION>\nCOMMAND: apply | delete\nOPTION: cni | kpng | all"
 elif [ "$arg" = "apply" ]; then
     if [ "$opt" = "all" ]; then
-        kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
+        kubectl taint nodes $control_plane_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule- >/dev/null 2>&1
         kubectl apply -f ${PATU_CONFIG}
-        kubectl label node $local_node kube-proxy=kpng
+        kubectl label node $control_plane_node kube-proxy=kpng --overwrite
         kubectl create configmap kpng --namespace kube-system --from-file ${FIXEDUP_KUBECONFIG}
         kubectl apply -f ${KPNG_CONFIG}
     elif [ "$opt" = "cni" ]; then
         kubectl apply -f ${PATU_CONFIG}
     else
-        kubectl taint nodes $local_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
-        kubectl label node $local_node kube-proxy=kpng
+        kubectl taint nodes $control_plane_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule- >/dev/null 2>&1
+        kubectl label node $control_plane_node kube-proxy=kpng --overwrite
         kubectl create configmap kpng --namespace kube-system --from-file ${FIXEDUP_KUBECONFIG}
         kubectl apply -f ${KPNG_CONFIG}
     fi
@@ -93,13 +97,13 @@ else
     if [ "$opt" = "all" ]; then
         kubectl delete -f ${KPNG_CONFIG}
         kubectl delete cm kpng -n kube-system
-        kubectl label node $local_node kube-proxy-
+        kubectl label node $control_plane_node kube-proxy-
         kubectl delete -f ${PATU_CONFIG}
     elif [ "$opt" = "cni" ]; then
         kubectl delete -f ${PATU_CONFIG}
     else
         kubectl delete -f ${KPNG_CONFIG}
         kubectl delete cm kpng -n kube-system
-        kubectl label node $local_node kube-proxy-
+        kubectl label node $control_plane_node kube-proxy-
     fi
 fi
