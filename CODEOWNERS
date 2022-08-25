@@ -1,2 +1,9 @@
 *                   @vishnoianil
-/.github/           @vishnoianil
+/cmd/               @vishnoianil
+/bpf/               @vishnoianil
+/.github/           @nerdalert
+/test/              @nerdalert
+/hack/              @nerdalert
+/deploy/            @nerdalert @vishnoianil
+/scripts/           @nerdalert @vishnoianil
+/docs/              @nerdalert @vishnoianil
