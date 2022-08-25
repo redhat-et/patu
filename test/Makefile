@@ -6,11 +6,16 @@ install-kind:
 # install-microshift:
 # TODO once integrated
 
+# Runs the custom Patu e2e tests
 run-e2e:
-	./scripts/test-e2e.sh -i $(IP_FAMILY) -b $(BACKEND) -c -n 1
 	cd e2e; \
 	go test -timeout=0 -v . \
             -ginkgo.v \
             -provider skeleton \
+            -ginkgo.skip=$(GINKGO_SKIP_TESTS) \
             -kubeconfig $(KUBECONFIG)
 	cd ..
+
+# Initializes kube conformance tests
+run-kube-conformance-e2e:
+	./scripts/test-e2e.sh -i $(IP_FAMILY) -b $(BACKEND) -c -n 1
