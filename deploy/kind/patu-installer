@@ -1,0 +1,166 @@
+#!/bin/bash
+#
+# Copyright © 2022 Authors of Patu
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# This script allows for 3 kinds of options- each available with two commands:
+# Command can be apply | delete
+# Options can be : cni | kpng | all
+# apply cni - deploys patu, delete cni - removes patu
+# apply kpng - deploys clusterip svc implementation, delete kpng - removes kpng
+# apply all - deploy cni, kpng ; delete all - remove cni, kpng
+
+# Examples with the Patu repo in the current working directory:
+# patu/deploy/kind/patu-installer apply cni
+# patu/deploy/kind/patu-installer delete cni
+# patu/deploy/kind/patu-installer apply all
+# patu/deploy/kind/patu-installer delete all
+
+# Example using ENVs for file locations to run the installer from any location:
+# KIND_CLUSTER="patu"
+# PATU_CONFIG=$HOME/patu/deploy/patu.yaml \
+# KPNG_CONFIG=$HOME/patu/deploy/kpngebpf.yaml \
+# ./deploy/kind/patu-installer apply all
+
+KIND_CLUSTER=${KIND_CLUSTER:=""}
+PATU_CONFIG=${PATU_CONFIG:="deploy/patu.yaml"}
+KPNG_CONFIG=${KPNG_CONFIG:="deploy/kpngebpf.yaml"}
+
+arg=$1
+opt=$2
+
+file_exists() {
+    local f="$1"
+    stat $f &>/dev/null
+}
+
+command_exists() {
+    cmd="$1"
+    command -v ${cmd} >/dev/null 2>&1
+}
+
+pass_message() {
+    if [ -z "${1}" ]; then
+        echo "pass_message() requires a message"
+        exit 1
+    fi
+    GREEN="\e[32m"
+    ENDCOLOR="\e[0m"
+    echo -e "[ ${GREEN}PASSED${ENDCOLOR} ] ${1}"
+}
+
+if_error_exit() {
+    if [ "$?" != "0" ]; then
+        if [ -n "$1" ]; then
+            error_message "$1"
+        fi
+        exit 1
+    fi
+}
+
+error_message() {
+    if [ -z "${1}" ]; then
+        echo "error_message() requires a message"
+        exit 1
+    fi
+    if [ -n "$1" ]; then
+        RED="\e[31m"
+        ENDCOLOR="\e[0m"
+        echo -e "[ ${RED}FAILED${ENDCOLOR} ] ${1}"
+    fi
+}
+
+# Retrieve and store the control-plane node name in a single node cluster
+control_plane_node=$(kubectl get nodes -l 'node-role.kubernetes.io/control-plane' -o custom-columns=NAME:.metadata.name --no-headers)
+if [ -z "$control_plane_node" ]; then
+    error_message " \$control_plane_node is empty, unable to determine the kubernetes node name with the command: kubectl get nodes -l 'node-role.kubernetes.io/control-plane' -o custom-columns=NAME:.metadata.name --no-headers"
+    exit 1
+fi
+
+if ! command_exists kind ; then
+    error_message " Kind is not install. Possibly no kind cluster running."
+    exit 1
+fi
+
+num_kind_cluster=`kind get clusters | wc -l`
+if [ "$num_kind_cluster" -gt 1 ]; then
+    error_message " Multiple Kind clusters are running. Please select the cluster name using ' export KIND_CLUSTER=<cluster-name>' \n"
+    exit 1
+fi
+
+if [ -z "${KIND_CLUSTER}" ]; then
+    KIND_CLUSTER=`kind get clusters`
+fi
+
+if ! file_exists ${PATU_CONFIG}; then
+    error_message " patu.yaml not found at ${PATU_CONFIG}. Please set it using 'export PATU_CONFIG=/path/to/patu.yaml'\n"
+    exit 1
+fi
+if ! file_exists ${KPNG_CONFIG}; then
+    error_message " kpngebpf.yaml not found at ${KPNG_CONFIG}. Please set it using 'export KPNG_CONFIG=/path/to/kpngebpf.yaml'\n"
+    exit 1
+fi
+
+kind get kubeconfig --internal --name "${KIND_CLUSTER}" > "/tmp/admin.conf"
+if_error_exit "Unable to get internal kube config file from Kind cluster ${KIND_CLUSTER}"
+kube_config="/tmp/admin.conf"
+
+# kpng configmap currently looks for a hardcoded file name of admin.conf
+# this simply copies KUBECONFIG to admin.conf if it does not exist
+kubeconfig_config_file="$(basename "${kube_config}")"
+kubeconfig_config_filepath="$(dirname "${kube_config}")"
+if ! [ ${kubeconfig_config_file} = "admin.conf" ]; then
+    cp ${kube_config} "${kubeconfig_config_filepath}/admin.conf"
+fi
+fixedup_kubeconfig="${kubeconfig_config_filepath}/admin.conf"
+
+if [[ "$arg" != "apply" && "$arg" != "delete" ]] || [[ "$opt" != "cni" && "$opt" != "kpng" && "$opt" != "all" ]]; then
+    echo -e "Usage details:\nRun as ./deploy/kind/patu-installer <COMMAND> <OPTION>\nCOMMAND: apply | delete\nOPTION: cni | kpng | all"
+elif [ "$arg" = "apply" ]; then
+    echo -e "Installing Patu for kind cluster : ${KIND_CLUSTER}"
+    if [ "$opt" = "all" ]; then
+        kubectl apply -f ${PATU_CONFIG}
+        kubectl label node $control_plane_node kube-proxy=kpng --overwrite
+
+        kubectl create configmap kpng --namespace kube-system --from-file ${fixedup_kubeconfig}
+        kubectl apply -f ${KPNG_CONFIG}
+    elif [ "$opt" = "cni" ]; then
+        kubectl apply -f ${PATU_CONFIG}
+    else
+        kubectl taint nodes $control_plane_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule- >/dev/null 2>&1
+        kubectl label node $control_plane_node kube-proxy=kpng --overwrite
+        kubectl create configmap kpng --namespace kube-system --from-file ${fixedup_kubeconfig}
+        kubectl apply -f ${KPNG_CONFIG}
+    fi
+    if_error_exit "Installation of Patu in Kind cluster ${KIND_CLUSTER} failed."
+    pass_message "Successfully installed Patu on Kind cluster : ${KIND_CLUSTER}"
+else
+    echo -e "Uninstalling Patu for kind cluster : ${KIND_CLUSTER}"
+    if [ "$opt" = "all" ]; then
+        kubectl delete -f ${KPNG_CONFIG}
+        kubectl delete cm kpng -n kube-system
+        kubectl label node $control_plane_node kube-proxy-
+        kubectl delete -f ${PATU_CONFIG}
+    elif [ "$opt" = "cni" ]; then
+        kubectl delete -f ${PATU_CONFIG}
+    else
+        kubectl delete -f ${KPNG_CONFIG}
+        kubectl delete cm kpng -n kube-system
+        kubectl label node $control_plane_node kube-proxy-
+    fi
+    if_error_exit "Uninstallation of Patu from Kind cluster ${KIND_CLUSTER} failed."
+    rm -f ${fixedup_kubeconfig}
+    pass_message "Successfully uninstalled Patu from Kind cluster : ${KIND_CLUSTER}"
+fi
