@@ -20,9 +20,9 @@ Easiest way to deploy and play with Patu CNI is to deploy a single node kubernet
 
 * Install single node kubernetes
 
-  <pre>
+  <pre><code>
   kubeadm init  --upload-certs --pod-network-cidr=10.200.0.0/16 --v=6 --skip-phases=addon/kube-proxy
-  </pre>
+  </code></pre>
   
   Pod's state before CNI deployment
 
@@ -39,15 +39,16 @@ Easiest way to deploy and play with Patu CNI is to deploy a single node kubernet
 
 * Clone the patu repo.
 
-  <pre>
+  <pre><code>
   git clone https://github.com/redhat-et/patu.git
-  </pre>
+  </code></pre>
 
 * Deploy the Patu CNI
 
-  <pre>
+  <pre><code>
+  cd patu
   ./deploy/kubernetes/patu-installer apply all
-  </pre>
+  </code></pre>
 
   Installer will deploy the patu manifest as well as KPNG eBPF manifest. Pod's status after CNI deployment
 
@@ -98,17 +99,17 @@ On your kubernetes node, install the bpftool (ensure you install the tool for th
 
 #### CNI Cleanup
 
-  <pre>
+  <pre><code>
   ./deploy/kubernetes/patu-installer delete all
-  </pre>
+  </code></pre>
 
   It will remove all the resources deployed through Patu and KPNG manifest. 
 
 #### Workload Deployment
 *Notes: Given that Patu CNI is targeted for single node, you need to remove the control-plane & master taint from the node to deploy any workload.*
-<pre>
+<pre><code>
 kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-
-</pre>
+</code></pre>
 
 ### Supported Kubernetes Platforms
 
