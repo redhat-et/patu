@@ -493,14 +493,12 @@ EOF
     fi
 
     # Copy installer script to the runner artifact bin dir
-    cp $HOME/work/patu/patu/scripts/installer/patu-installer ${bin_dir}
+    cp $HOME/work/patu/patu/deploy/kind/patu-installer ${bin_dir}
     # Copy installer script and deployment files for installer in e2e
     # This also tests the default filepath installation in e2e rather
     # than via ENVs in the kind cluster setup in CI
     mkdir -p $HOME/work/patu/patu/test/e2e/deploy
-    mkdir -p $HOME/work/patu/patu/test/e2e/hack/kubernetes/
     cp $HOME/work/patu/patu/deploy/* $HOME/work/patu/patu/test/e2e/deploy/
-    cp $HOME/work/patu/patu/hack/kubernetes/* $HOME/work/patu/patu/test/e2e/hack/kubernetes/
 
     # Install Kubeproxy backend matrix
     if [ "${backend}" == "kubeproxy" ]; then
@@ -518,9 +516,8 @@ EOF
             --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/command/-", "value": "--v='"${kind_cluster_log_level}"'" }]'
 
         # Install Patu CNI using the installer
-        KUBECONFIG=${HOME}/.kube/config \
         PATU_CONFIG=$HOME/work/patu/patu/deploy/patu.yaml \
-        KPNG_CONFIG=$HOME/work/patu/patu/hack/kubernetes/kpngebpf.yaml \
+        KPNG_CONFIG=$HOME/work/patu/patu/deploy/kpngebpf.yaml \
         patu-installer apply cni
         if_error_exit "Failed to install Patu"
     fi
@@ -538,9 +535,8 @@ EOF
         if_error_exit "cannot create kind cluster ${cluster_name}"
 
         # Install Patu and KPNG using the installer
-        KUBECONFIG=${HOME}/.kube/config \
         PATU_CONFIG=$HOME/work/patu/patu/deploy/patu.yaml \
-        KPNG_CONFIG=$HOME/work/patu/patu/hack/kubernetes/kpngebpf.yaml \
+        KPNG_CONFIG=$HOME/work/patu/patu/deploy/kpngebpf.yaml \
         patu-installer apply all
         if_error_exit "Failed to install Patu"
     fi

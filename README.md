@@ -7,18 +7,18 @@ It's an attempt to build CNI that is driven by the Edge related use cases and ta
 
 ## Deploying Patu
 
-Currently Patu CNI supports Pod-to-Pod networking and Cluster IP implementation. Pod-to-Pod networking is enabled through Bridge CNI and eBPF based socket redirection. Cluster IP support is provided through the [Kube Proxy Next Generation](https://github.com/kubernetes-sigs/kpng) eBPF based backend. If you want to use Patu CNI binary with the existing kube-proxy please refer to the instructions in `/hack` directory. Node Port service and Networking Policy support is currently under development and will land soon.
+Currently Patu CNI supports Pod-to-Pod networking and Cluster IP implementation. Pod-to-Pod networking is enabled through Bridge CNI with eBPF based socket redirection. Cluster IP support is provided through the [Kube Proxy Next Generation](https://github.com/kubernetes-sigs/kpng) eBPF based backend. If you want to use Patu CNI binary with the existing kube-proxy implementation, please refer to the instructions for specific cluster environment in `/deploy/` directory. Node Port service and Networking Policy support is currently under development and will land soon.
 
 
 ### Kubernetes
-These instructions are to deploy Patu CNI with single node kubernetes, but if you are looking for detail instructions to setup Patu CNI to different environment (Kind, Microshift), please refer to the relevant documents in the `./hack` directory.
+These instructions are to deploy Patu CNI with single node kubernetes, but if you are looking for detail instructions to setup Patu CNI to different environment (Kind, Microshift), please refer to the relevant documents in the `./deploy/` directory.
 
 
 #### CNI Deployment
-Easiest way to deploy and play with Patu CNI is to deploy a single node kubernetes with `--pod-network-cidr=10.200.0.0/16`. Currently Patu CNI is tested with kernel version 5.15 (specifically Ubuntu 22.04), so we would recommend to create a Ubuntu 22.04 VM/server as your playground. 
+Easiest way to deploy and play with Patu CNI is to deploy a single node kubernetes with `--pod-network-cidr=10.200.0.0/16`. Currently Patu CNI is tested with kernel version 5.15 (specifically Ubuntu 22.04), so we would recommend to create a Ubuntu 22.04 VM/server as your playground.
 
 
-* Install single node kubernetes 
+* Install single node kubernetes
 
   <pre>
   kubeadm init  --upload-certs --pod-network-cidr=10.200.0.0/16 --v=6 --skip-phases=addon/kube-proxy
@@ -46,7 +46,7 @@ Easiest way to deploy and play with Patu CNI is to deploy a single node kubernet
 * Deploy the Patu CNI
 
   <pre>
-  ./scripts/installer/patu-installer apply all
+  ./deploy/kubernetes/patu-installer apply all
   </pre>
 
   Installer will deploy the patu manifest as well as KPNG eBPF manifest. Pod's status after CNI deployment
@@ -99,7 +99,7 @@ On your kubernetes node, install the bpftool (ensure you install the tool for th
 #### CNI Cleanup
 
   <pre>
-  ./scripts/installer/patu-installer delete all
+  ./deploy/kubernetes/patu-installer delete all
   </pre>
 
   It will remove all the resources deployed through Patu and KPNG manifest. 
@@ -112,8 +112,9 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kuber
 
 ### Supported Kubernetes Platforms
 
-- [kind](./hack/kind/README.md) - Local Kubernetes clusters primarily designed for testing Kubernetes
-- [Microshift](./hack/microshift/README.md) - OpenShift/Kubernetes optimized for the device edge
+- [kind](./deploy/kind/README.md) - Local Kind Kubernetes clusters primarily designed for testing Kubernetes
+- [Kubernetes](./deploy/kubernetes/README.md) - Single Node Kubernetes cluster
+- [Microshift](./deploy/microshift/README.md) - OpenShift/Kubernetes optimized for the device edge
 
 
 ### Note

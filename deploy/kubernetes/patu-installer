@@ -23,20 +23,20 @@
 # apply all - deploy cni, kpng ; delete all - remove cni, kpng
 
 # Examples with the Patu repo in the current working directory:
-# patu/scripts/installer/patu-installer apply cni
-# patu/scripts/installer/patu-installer delete cni
-# patu/scripts/installer/patu-installer apply all
-# patu/scripts/installer/patu-installer delete all
+# patu/deploy/kubernetes/patu-installer apply cni
+# patu/deploy/kubernetes/patu-installer delete cni
+# patu/deploy/kubernetes/patu-installer apply all
+# patu/deploy/kubernetes/patu-installer delete all
 
 # Example using ENVs for file locations to run the installer from any location:
-# KUBECONFIG=${HOME}/.kube/config \
+# KUBECONFIG=/etc/kubernetes/admin.conf \
 # PATU_CONFIG=$HOME/patu/deploy/patu.yaml \
-# KPNG_CONFIG=$HOME/patu/hack/kubernetes/kpngebpf.yaml \
-# ./patu-installer apply all
+# KPNG_CONFIG=$HOME/patu/deploy/kpngebpf.yaml \
+# ./deploy/kubernetes/patu-installer apply all
 
 KUBECONFIG=${KUBECONFIG:="/etc/kubernetes/admin.conf"}
 PATU_CONFIG=${PATU_CONFIG:="deploy/patu.yaml"}
-KPNG_CONFIG=${KPNG_CONFIG:="hack/kubernetes/kpngebpf.yaml"}
+KPNG_CONFIG=${KPNG_CONFIG:="deploy/kpngebpf.yaml"}
 
 arg=$1
 opt=$2
@@ -46,24 +46,55 @@ file_exists() {
     stat $f &>/dev/null
 }
 
+pass_message() {
+    if [ -z "${1}" ]; then
+        echo "pass_message() requires a message"
+        exit 1
+    fi
+    GREEN="\e[32m"
+    ENDCOLOR="\e[0m"
+    echo -e "[ ${GREEN}PASSED${ENDCOLOR} ] ${1}"
+}
+
+if_error_exit() {
+    if [ "$?" != "0" ]; then
+        if [ -n "$1" ]; then
+            error_message "$1"
+        fi
+        exit 1
+    fi
+}
+
+error_message() {
+    if [ -z "${1}" ]; then
+        echo "error_message() requires a message"
+        exit 1
+    fi
+    if [ -n "$1" ]; then
+        RED="\e[31m"
+        ENDCOLOR="\e[0m"
+        echo -e "[ ${RED}FAILED${ENDCOLOR} ] ${1}"
+    fi
+}
+
 # Retrieve and store the control-plane node name in a single node cluster
 control_plane_node=$(kubectl get nodes -l 'node-role.kubernetes.io/control-plane' -o custom-columns=NAME:.metadata.name --no-headers)
 if [ -z "$control_plane_node" ]; then
-    echo -e "\n\$control_plane_node is empty, unable to determine the kubernetes node name with the command: kubectl get nodes -l 'node-role.kubernetes.io/control-plane' -o custom-columns=NAME:.metadata.name --no-headers"
+    error_message " \$control_plane_node is empty, unable to determine the kubernetes node name with the command: kubectl get nodes -l 'node-role.kubernetes.io/control-plane' -o custom-columns=NAME:.metadata.name --no-headers"
     exit 1
 fi
 
 # Verify config and yaml files exist
 if ! file_exists ${KUBECONFIG}; then
-    echo -e "\nkubeconfig not found at ${KUBECONFIG}. Please set it using 'export KUBECONFIG=/path/to/config'\n"
+    error_message "kubeconfig not found at ${KUBECONFIG}. Please set it using 'export KUBECONFIG=/path/to/config'\n"
     exit 1
 fi
 if ! file_exists ${PATU_CONFIG}; then
-    echo -e "\npatu.yaml not found at ${PATU_CONFIG}. Please set it using 'export PATU_CONFIG=/path/to/patu.yaml'\n"
+    error_message "patu.yaml not found at ${PATU_CONFIG}. Please set it using 'export PATU_CONFIG=/path/to/patu.yaml'\n"
     exit 1
 fi
 if ! file_exists ${KPNG_CONFIG}; then
-    echo -e "\nkpngebpf.yaml not found at ${KPNG_CONFIG}. Please set it using 'export KPNG_CONFIG=/path/to/kpngebpf.yaml'\n"
+    error_message "kpngebpf.yaml not found at ${KPNG_CONFIG}. Please set it using 'export KPNG_CONFIG=/path/to/kpngebpf.yaml'\n"
     exit 1
 fi
 
@@ -77,8 +108,9 @@ fi
 FIXEDUP_KUBECONFIG="${KUBECONFIG_CONFIG_FILEPATH}/admin.conf"
 
 if [[ "$arg" != "apply" && "$arg" != "delete" ]] || [[ "$opt" != "cni" && "$opt" != "kpng" && "$opt" != "all" ]]; then
-    echo -e "Usage details:\nRun as ./patu-installer <COMMAND> <OPTION>\nCOMMAND: apply | delete\nOPTION: cni | kpng | all"
+    echo -e "Usage details:\nRun as ./deploy/kubernetes/patu-installer <COMMAND> <OPTION>\nCOMMAND: apply | delete\nOPTION: cni | kpng | all"
 elif [ "$arg" = "apply" ]; then
+    echo -e "Installing Patu for kubernetes cluster."
     if [ "$opt" = "all" ]; then
         kubectl taint nodes $control_plane_node node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule- >/dev/null 2>&1
         kubectl apply -f ${PATU_CONFIG}
@@ -93,7 +125,10 @@ elif [ "$arg" = "apply" ]; then
         kubectl create configmap kpng --namespace kube-system --from-file ${FIXEDUP_KUBECONFIG}
         kubectl apply -f ${KPNG_CONFIG}
     fi
+    if_error_exit "Installation of Patu in Kubernetes cluster failed."
+    pass_message "Successfully installed Patu on Kubernetes cluster."
 else
+    echo -e "Uninstalling Patu from kubernetes cluster."
     if [ "$opt" = "all" ]; then
         kubectl delete -f ${KPNG_CONFIG}
         kubectl delete cm kpng -n kube-system
@@ -106,4 +141,6 @@ else
         kubectl delete cm kpng -n kube-system
         kubectl label node $control_plane_node kube-proxy-
     fi
+    if_error_exit "Uninstallation of Patu from Kubernetes cluster failed."
+    pass_message "Successfully uninstalled Patu from Kubernetes cluster."
 fi
