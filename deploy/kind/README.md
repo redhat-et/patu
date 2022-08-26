@@ -1,4 +1,4 @@
-# Deploying Patu CNI in Kind Cluster
+# Deploy Patu as a Kind Cluster CNI
 
 ### Deploy Kind Cluster
 
