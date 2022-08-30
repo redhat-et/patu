@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         ipFamily: ["ipv4"]
-        backend: ["kubeproxy"]
+        backend: ["kpng", "kubeproxy"]
     env:
       JOB_NAME: "patu-e2e-${{ matrix.ipFamily }}-${{ matrix.backend }}"
       IP_FAMILY: ${{ matrix.ipFamily }}
@@ -55,10 +55,18 @@ jobs:
     - name: Setup cluster
       run: make -C test IP_FAMILY=${{ matrix.ipFamily }} BACKEND=${{ matrix.backend }} install-kind
 
-    - name: Run e2e tests
+    - name: Run Patu e2e
+      run: |
+        if [ $BACKEND == "kpng" ]; then
+          GINKGO_SKIP_TESTS="Internet"
+        fi
+        export "PATH=$HOME/work/patu/patu/test/temp/e2e/bin:$PATH"
+        make -C test IP_FAMILY=${{ matrix.ipFamily }} BACKEND=${{ matrix.backend }} GINKGO_SKIP_TESTS=$GINKGO_SKIP_TESTS KUBECONFIG=$HOME/.kube/config run-e2e
+
+    - name: Run Kubernetes Conformance e2e
       run: |
         export "PATH=$HOME/work/patu/patu/test/temp/e2e/bin:$PATH"
-        make -C test IP_FAMILY=${{ matrix.ipFamily }} BACKEND=${{ matrix.backend }} KUBECONFIG=$HOME/.kube/config run-e2e
+        make -C test IP_FAMILY=${{ matrix.ipFamily }} BACKEND=${{ matrix.backend }} run-kube-conformance-e2e
 
     - name: Export logs
       if: always()

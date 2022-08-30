@@ -90,27 +90,6 @@ command_exists() {
     command -v ${cmd} >/dev/null 2>&1
 }
 
-function delete_kind_cluster() {
-    ###########################################################################
-    # Description:                                                            #
-    # delete kind cluster                                                     #
-    #                                                                         #
-    # Arguments:                                                              #
-    #   arg1: cluster name                                                    #
-    ###########################################################################
-    [ $# -eq 1 ]
-    if_error_exit "Wrong number of arguments to ${FUNCNAME[0]}"
-
-    local cluster_name="${1}"
-
-    if kind get clusters | grep -q "${cluster_name}" &>/dev/null; then
-        kind delete cluster --name "${cluster_name}" &>/dev/null
-        if_error_warning "cannot delete cluster ${cluster_name}"
-
-        pass_message "Cluster ${cluster_name} deleted."
-    fi
-}
-
 function run_tests() {
     ###########################################################################
     # Description:                                                            #
@@ -120,14 +99,16 @@ function run_tests() {
     #   arg1: e2e directory                                                   #
     #   arg2: e2e_test, path to test binary                                   #
     #   arg3: parallel ginkgo tests boolean                                   #
+    #   arg4: backend                                                         #
     ###########################################################################
 
-    [ $# -eq 3 ]
+    [ $# -eq 4 ]
     if_error_exit "Wrong number of arguments to ${FUNCNAME[0]}"
 
     local e2e_dir="${1}"
     local e2e_test="${2}"
     local parallel="${3}"
+    local backend="${4}"
 
     local artifacts_directory="${e2e_dir}/artifacts"
 
@@ -139,7 +120,16 @@ function run_tests() {
 
     # ginkgo regexes
     local ginkgo_skip="${GINKGO_SKIP_TESTS:-}"
-    local ginkgo_focus=${GINKGO_FOCUS:-"\\[Conformance\\]"}
+
+    # TODO: resolve the need to Skip the additional tests that are timing out:
+    # "should be able to change the type from ClusterIP to ExternalName"
+    # https://github.com/kubernetes/kubernetes/blob/6c0bab878c688fe89fee361e811dc30b518a60e2/test/e2e/network/service.go#L1520
+    # "should provide DNS for pods for Subdomain"
+    # https://github.com/kubernetes/kubernetes/blob/4569e646ef161c0262d433aed324fec97a525572/test/e2e/network/dns.go#L290
+    if [ "${backend}" = "kpng" ]; then
+        ginkgo_skip="machinery|Feature|Federation|PerformanceDNS|Disruptive|Serial|LoadBalancer|GCE|Netpol|NetworkPolicy|ExternalName|NodePort|DNS"
+    fi
+
     # if we set PARALLEL=true, skip serial tests set --ginkgo-parallel
     if [ "${parallel}" = "true" ]; then
         export GINKGO_PARALLEL=y
@@ -157,7 +147,7 @@ function run_tests() {
     export KUBE_CONTAINER_RUNTIME_NAME=containerd
 
     ${e2e_dir}/bin/ginkgo --nodes=1 \
-        --focus="${ginkgo_focus}" \
+        --focus="${GINKGO_FOCUS}" \
         --skip="${ginkgo_skip}" \
         "${e2e_test}" \
         -- \
@@ -265,10 +255,10 @@ function main() {
         # REMOVE THIS comment out ON THE REPO WITH A PR WHEN LOCAL TESTS ARE ALL GREEN
         # set -e
         echo "this tests can't fail now in ci"
-#        set_host_network_settings "${ip_family}"
+        # set_host_network_settings "${ip_family}"
     fi
 
-    run_tests "${e2e_dir}" "${bin_dir}/e2e.test" "false"
+    run_tests "${e2e_dir}" "${bin_dir}/e2e.test" "false" "${backend}"
 
     if ${devel_mode}; then
         echo -e "\n+=====================================================================================+"
