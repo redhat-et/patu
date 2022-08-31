@@ -84,15 +84,25 @@ if [ -z "$control_plane_node" ]; then
     exit 1
 fi
 
-# Verify config and yaml files exist
+# Verify kubeconfig file exists
 if ! file_exists ${KUBECONFIG}; then
     error_message "kubeconfig not found at ${KUBECONFIG}. Please set it using 'export KUBECONFIG=/path/to/config'\n"
     exit 1
 fi
+
+# Verify the current user has read permissions
+if [[ ! -r ${KUBECONFIG} ]]; then
+    error_message "kubeconfig at ${KUBECONFIG} is not readable, please check file permissions or specify an alternative via the KUBECONFIG env\n"
+    exit 1
+fi
+
+# Verify the patu yaml file exists
 if ! file_exists ${PATU_CONFIG}; then
     error_message "patu.yaml not found at ${PATU_CONFIG}. Please set it using 'export PATU_CONFIG=/path/to/patu.yaml'\n"
     exit 1
 fi
+
+# Verify the kpng yaml file exists
 if ! file_exists ${KPNG_CONFIG}; then
     error_message "kpngebpf.yaml not found at ${KPNG_CONFIG}. Please set it using 'export KPNG_CONFIG=/path/to/kpngebpf.yaml'\n"
     exit 1

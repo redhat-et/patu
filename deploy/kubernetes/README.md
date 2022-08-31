@@ -19,7 +19,15 @@ kubectl delete daemonsets -n kube-system kube-proxy
 #### Clone Patu Repository
 
 <pre><code>
-  git clone https://github.com/redhat-et/patu.git
+git clone https://github.com/redhat-et/patu.git
+</code></pre>
+
+#### Kubernetes Kubeconfig
+
+By default, kubeadm places kubeconfig file at `/etc/kubernetes/admin.conf` with root permissions. The installer defaults to that location as well. Specify a custom kubeconfig location with the following example passing `KUBECONFIG` as an environmental variable:
+
+<pre><code>
+KUBECONFIG=~/.kube/config ./deploy/kubernetes/patu-installer apply all
 </code></pre>
 
 #### Install PATU CNI Binary
