@@ -19,9 +19,6 @@ limitations under the License.
 
 __section("cgroup/connect4") int patu_connect4(struct bpf_sock_addr *ctx) {
   int pid = get_current_pid_tgid() >> 32;
-  print_info("connect4 is called by %d", pid);
-  print_info("connect4, ip : >>%X<<  port %d", bpf_htonl(ctx->user_ip4),
-             bpf_htons(ctx->user_port));
   return 1;
 }
 

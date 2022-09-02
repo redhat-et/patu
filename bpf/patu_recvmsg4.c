@@ -20,9 +20,6 @@ limitations under the License.
 
 __section("cgroup/recvmsg4") int patu_recvmsg4(struct bpf_sock_addr *ctx) {
   int pid = get_current_pid_tgid() >> 32;
-  print_info("recvmsg4 is called by %d", pid);
-  print_info("recvmsg4 ip : >>%X<<  port %d", bpf_htonl(ctx->user_ip4),
-             bpf_htons(ctx->user_port));
   return 1;
 }
 
