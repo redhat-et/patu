@@ -19,13 +19,6 @@ limitations under the License.
 #include "include/helpers/helpers.h"
 #include "include/helpers/maps.h"
 
-static inline void logSkmsgMetadata(struct sk_msg_md *msg) {
-  print_info("[sk_msg] src-ip : >>%X<<  src-port: %d",
-             bpf_htonl(msg->local_ip4), (bpf_htonl(msg->local_port)) >> 16);
-  print_info("[sk_msg] dest-ip: >>%X<< dest-port: %d",
-             bpf_htonl(msg->remote_ip4), msg->remote_port >> 16);
-}
-
 static inline int is_ipv4_endpoint(__u32 ip) {
   /* Check for static pod network 10.200.0.0/16*/
   int netip = bpf_htonl(0x0ac80000);
@@ -44,8 +37,6 @@ static inline void extract_socket_key_v4(struct sk_msg_md *msg,
 
 __section("sk_msg") int patu_skmsg(struct sk_msg_md *msg) {
   if (is_ipv4_endpoint(msg->remote_ip4)) {
-
-    logSkmsgMetadata(msg);
 
     struct socket_key sockkey = {};
     extract_socket_key_v4(msg, &sockkey);
