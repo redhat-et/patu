@@ -1,0 +1,18 @@
+---
+- name: Verify kubectl
+  command: kubectl get pods --all-namespaces
+
+- name: Reset kubeadm
+  shell: |
+    sudo kubeadm -f reset
+    sudo crictl rm -f `crictl ps -a | grep "k8s_" | awk '{print $1}'`
+    # Remove all the patu images.
+    sudo apt purge kubectl kubeadm kubelet kubernetes-cni -y --allow-change-held-packages && apt autoremove -y
+    sudo rm -fr /etc/kubernetes/; sudo rm -fr ~/.kube/; sudo rm -fr /var/lib/etcd; sudo rm -rf /var/lib/cni/
+    sudo systemctl restart crio.service
+    sudo systemctl daemon-reload
+    sudo iptables -F
+    sudo iptables -t nat -F
+    sudo iptables -t mangle -F
+    sudo iptables -X
+    sudo iptables -L

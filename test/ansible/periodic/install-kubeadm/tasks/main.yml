@@ -1,0 +1,108 @@
+---
+# tasks file for install-kubeadm
+
+- name: Update repo cache
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: Install dependencies
+  become: yes
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg2
+      - software-properties-common
+    state: latest
+
+- name: Host configurations
+  shell: |
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo modprobe br_netfilter
+
+- name: Host configurations
+  shell: |
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo modprobe br_netfilter
+
+- name: Configure cri-o repos
+  vars:
+    OS: "xUbuntu_20.04"
+    CRIO_VERSION: "1.23"
+  shell: |
+    echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ OS }}/ /"|sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ CRIO_VERSION }}/{{ OS }}/ /"|sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{{ CRIO_VERSION }}.list
+    curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{{ CRIO_VERSION }}/{{ OS }}/Release.key | sudo apt-key add -
+    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ OS }}/Release.key | sudo apt-key add -
+  ignore_errors: true
+
+- name: Configure kube repos
+  shell: |
+    sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+- name: Update repo cache
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: Install cri-o
+  become: yes
+  apt:
+    name:
+      - cri-o
+      - cri-o-runc
+    state: latest
+
+- name: Enable cri-o systemd
+  shell: |
+    sudo systemctl enable crio.service
+    sudo systemctl start crio.service
+
+- name: Install kube binaries
+  vars:
+    K8S_VERSION: "1.24.4-00"
+  shell: sudo apt install -y kubeadm={{ K8S_VERSION }} kubelet={{ K8S_VERSION }} kubectl={{ K8S_VERSION }}
+
+- name: Deploy kubeadm for the Patu matrix with kubeproxy disabled
+  shell: sudo kubeadm init --upload-certs --pod-network-cidr=10.200.0.0/16 --v=6 --skip-phases=addon/kube-proxy
+  when:  MATRIX_CNI == "patu"
+
+- name: Deploy kubeadm for the Flannel CNI matrix with kubeproxy enabled
+  shell: sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+  when:  MATRIX_CNI == "flannel"
+
+- name: Wait for kubeconfig to be created
+  become: yes
+  wait_for:
+    path: /etc/kubernetes/admin.conf
+    state: present
+    timeout: 30
+  ignore_errors: True
+
+- name: Creating the .kube directory
+  file:
+    path: /home/{{ ansible_user }}/.kube/
+    state: directory
+
+- name: Copying kubeconfig to .kube directory
+  become: yes
+  copy:
+    remote_src: yes
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ ansible_user }}/.kube/config
+
+- name: Change the owner of .kube/config
+  shell: "sudo chown $(id -u {{ ansible_user }}):$(id -g {{ ansible_user }}) /home/{{ ansible_user }}/.kube/config"
+
+- name: export KUBECONFIG
+  shell: export KUBECONFIG=/home/{{ ansible_user }}/.kube/config
+
+- name: Pause for convergence
+  pause:
+    seconds: 15
+
+- name: Verify kubectl
+  command: kubectl get pods --all-namespaces

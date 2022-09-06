@@ -1,0 +1,71 @@
+---
+- name: Verify kubectl
+  command: kubectl get pods --all-namespaces
+
+- name: Deploy the iperf3 server
+  shell: |
+    cat << EOF | kubectl apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: iperf3-svr
+      labels:
+        app: iperf3-svr
+    spec:
+      containers:
+      - name: iperf3-svr
+        image: networkstatic/iperf3
+        ports:
+        - containerPort: 5201
+        args: ["-s"]
+    EOF
+
+- name: Pause for the iperf3 server to initialize
+  pause:
+    seconds: 10
+
+- name: Register the IP address of the iperf-svr pod
+  shell: |
+    kubectl get pods -l app=iperf3-svr -o custom-columns=IP:status.podIP --no-headers
+  register: iperf_svr_ip
+
+- name: Display the IP address of the iperf-svr pod
+  debug:
+    msg: iperf-svr pod address "{{ iperf_svr_ip.stdout }}"
+
+- name: Print the iperf3 client yaml to file
+  shell: |
+    cat <<EOF > iperf-client.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: iperf3-client
+      labels:
+        app: iperf3-client
+    spec:
+      containers:
+      - name: iperf3-client
+        image: networkstatic/iperf3
+        args: ["-c", "{{ iperf_svr_ip.stdout }}"]
+      restartPolicy: Never
+    EOF
+
+- name: Run the iperf3 client
+  shell: kubectl apply -f iperf-client.yaml
+
+- name: Pause for the iperf3-client to initialize and run performance test
+  pause:
+    seconds: 25
+
+- name: Create a results file
+  shell: |
+    printf "====== Performance Matrix: {{ MATRIX }} ======\n" > iperf-results-{{ MATRIX_CNI }}.txt
+
+- name: Log test results to a file
+  shell: kubectl logs iperf3-svr >> iperf-results-{{ MATRIX_CNI }}.txt
+
+- name: Copy iperf results back to runner
+  ansible.builtin.fetch:
+    src: /home/{{ ansible_user }}/iperf-results-{{ MATRIX_CNI }}.txt
+    dest: ./
+    flat: true

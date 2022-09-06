@@ -58,3 +58,6 @@ dkms.conf
 
 # jetbrains config files
 .idea/
+
+# miscellaneous
+*.pem

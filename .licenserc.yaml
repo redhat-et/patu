@@ -34,3 +34,4 @@ header:
     - '**/*.yaml'
     - '**/*.yml'
     - '.clang-format'
+    - 'test/ansible/'
