@@ -1,0 +1,41 @@
+name: Non Coding Task
+description: Any task that doesn't require any change in the repository contents (code, doc). E.g CPU/Mem profiling. 
+title: "Brief Description of the task."
+labels: ["needs-triaging", "kind/non-coding-task "]
+assignees: ''
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sparing the time to submit the task.
+  - type: textarea
+    id: task-description
+    attributes:
+      label: Describe the Task
+      description: what is this task about?
+      placeholder: Please provide a clear and concise description of the task.
+    validations:
+      required: true
+  - type: textarea
+    id: deployment-environment
+    attributes:
+      label: Deployment Environment
+      description: Please complete the following information
+      placeholder: |
+        Operating System: 
+        Kernel Version: 
+        Go Version:
+    validations:
+      required: false
+- type: textarea
+    id: deliverables
+    attributes:
+      label: Outcome/Deliverables of the Task
+      description: What deliverable do you think this task would generate?
+      placeholder: |
+        Please list the possible deliverables (or update this section once the task is concluded) such as 
+        - Logs, blogs, slide decks and relevant artifacts that are not published to the project repo.
+        - Reference to the PR that is generated as an outcome of this work.
+        - Anything that is relevant and helpful to understand the task and it's overall outcome.
+    validations:
+      required: false
