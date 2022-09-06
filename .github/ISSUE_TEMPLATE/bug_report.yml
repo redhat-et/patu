@@ -1,5 +1,7 @@
 name: Bug report
 description: Report an Issue to help and contribute to improve Project Patu
+title: "Brief bug summary"
+labels: ["needs-triaging", "kind/bug"]
 body:
   - type: markdown
     attributes:
