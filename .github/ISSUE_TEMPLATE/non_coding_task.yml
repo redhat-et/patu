@@ -2,7 +2,6 @@ name: Non Coding Task
 description: Any task that doesn't require any change in the repository contents (code, doc). E.g CPU/Mem profiling. 
 title: "Brief Description of the task."
 labels: ["needs-triaging", "kind/non-coding-task "]
-assignees: ''
 body:
   - type: markdown
     attributes:
