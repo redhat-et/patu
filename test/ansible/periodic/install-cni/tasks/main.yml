@@ -1,0 +1,47 @@
+---
+# tasks file for install-cni
+- name: Verify kubectl
+  command: kubectl get pods --all-namespaces
+
+### Patu Installer Section ###
+- name: Copy the Patu repo to the remote host
+  copy:
+    src: ../../../../patu/
+    dest: /home/{{ ansible_user }}/patu/
+  when: MATRIX_CNI == "patu"
+
+- name: Change file ownership, group and permissions
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/patu/deploy/kubernetes/patu-installer"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  when: MATRIX_CNI == "patu"
+
+- name: Install KPNG and Patu
+  shell: |
+    PATU_CONFIG=/home/{{ ansible_user }}/patu/deploy/patu.yaml \
+    KPNG_CONFIG=/home/{{ ansible_user }}/patu/deploy/kpngebpf.yaml \
+    /home/{{ ansible_user }}/patu/deploy/kubernetes/patu-installer apply all
+  when: MATRIX_CNI == "patu"
+
+- name: Wait for CoreDNS pods to become ready
+  shell: kubectl wait --for=condition=ready pods -l k8s-app=kube-dns -n kube-system --timeout=30s
+  when: MATRIX_CNI == "patu"
+
+### Flannel Installer Section ###
+- name: Deploy kubeadm for the Flannel CNI for the Flannel matrix
+  shell: kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
+  when: MATRIX_CNI == "flannel"
+
+- name: Remove kubeadm taints
+  shell: kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-
+  when: MATRIX_CNI == "flannel"
+
+- name: Pause for flannel convergence
+  pause:
+    seconds: 10
+  when: MATRIX_CNI == "flannel"
+
+- name: Display kube pods
+  command: kubectl get pods --all-namespaces

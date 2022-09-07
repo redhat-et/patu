@@ -1,0 +1,64 @@
+# roles get branched from here
+- hosts: localhost
+  vars_files:
+    - vars.yml
+  roles:
+    - role: setup-ec2
+
+- hosts: singleNodeCluster
+  roles:
+    - role: install-kubeadm
+      environment:
+        KUBECONFIG: /home/{{ ansible_user }}/.kube/config
+      when: MATRIX_CNI == "patu"
+
+- hosts: singleNodeCluster
+  roles:
+    - role: install-kubeadm
+      environment:
+        KUBECONFIG: /home/{{ ansible_user }}/.kube/config
+      when: MATRIX_CNI == "flannel"
+
+- hosts: singleNodeCluster
+  roles:
+    - role: install-cni
+      environment:
+        KUBECONFIG: /home/{{ ansible_user }}/.kube/config
+      when: MATRIX_CNI == "patu"
+
+- hosts: singleNodeCluster
+  roles:
+    - role: install-cni
+      environment:
+        KUBECONFIG: /home/{{ ansible_user }}/.kube/config
+      when: MATRIX_CNI == "flannel"
+
+- hosts: singleNodeCluster
+  roles:
+    - role: run-iperf
+      environment:
+        KUBECONFIG: /home/{{ ansible_user }}/.kube/config
+      vars:
+        MATRIX: patu-kpng-kubeadm
+      when: MATRIX_CNI == "patu"
+
+- hosts: singleNodeCluster
+  roles:
+    - role: run-iperf
+      environment:
+        KUBECONFIG: /home/{{ ansible_user }}/.kube/config
+      vars:
+        MATRIX: flannel-kubeproxy-kubeadm
+      when: MATRIX_CNI == "flannel"
+
+- hosts: singleNodeCluster
+  roles:
+    - role: reset-kubeadm
+
+# TODO: cleanup using explicit node names from inventory instead of NodeTag
+# TODO: but what about a scenario where the runners are spun up but a step fails?
+#- hosts: localhost
+#  vars_files:
+#    - vars.yml
+#  roles:
+#    - role: terminate-ec2

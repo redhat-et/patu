@@ -1,0 +1,55 @@
+name: Patu Periodic Cloud Performance and Scale Testing
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+
+jobs:
+  deploy-perf-scale:
+    name: deploy-perf-scale
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        cni: ["patu", "flannel"]
+        kube-distribution: ["kubeadm"]
+    env:
+      JOB_NAME: "patu-periodic-perfscale-${{ matrix.k8s-distro }}-${{ matrix.cni }}"
+      MATRIX_CNI: ${{ matrix.cni }}
+      KUBE_DIST: ${{ matrix.k8s-distro }}
+      AWS_REGION: "us-east-1"
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Ansible and dependencies
+      run: pip3.10 install boto boto3 ansible-vault ansible-core==2.13.3
+
+    - name: Install amazon.aws Ansible library
+      run: ansible-galaxy collection install amazon.aws
+
+    - name: Create ansible ssh key
+      run: |
+        echo "${{ secrets.ANSIBLE_SSH_KEY }}" > ./test/ansible/periodic/patu-ci.pem
+        chmod 0400 ./test/ansible/periodic/patu-ci.pem
+
+    - name: Create vault password file
+      run: |
+        echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > /home/runner/work/patu/patu/vault-secret.txt
+        chmod 0400 vault-secret.txt
+
+    - name: Deploy EC2 Playbooks
+      run: |
+        ansible-playbook -vv ./test/ansible/periodic/deploy.yml --extra-vars "MATRIX_CNI=${{ matrix.cni }}" --vault-password-file /home/runner/work/patu/patu/vault-secret.txt
+        rm vault-secret.txt
+        rm patu-ci.pem
+
+    - name: Display Iperf3 Results for ${{ matrix.cni }}
+      run: cat ./test/ansible/periodic/iperf-results-${{ matrix.cni }}.txt

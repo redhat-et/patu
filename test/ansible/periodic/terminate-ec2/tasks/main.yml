@@ -1,0 +1,9 @@
+---
+# tasks file for terminate-ec2
+- name: Terminate all ec2 instances in a region with the tag patu-ci-single-node-cluster
+  become: false
+  ec2_instance:
+    state: absent
+    filters:
+      "tag:NodeType": "{{ aws_nodetype_tag }}"
+      instance-state-name: running
