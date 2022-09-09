@@ -2,7 +2,7 @@ name: Patu Periodic Cloud Performance and Scale Testing
 
 on:
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '0 14 * * *'
 
 jobs:
   deploy-perf-scale:
@@ -40,15 +40,12 @@ jobs:
     - name: Install amazon.aws Ansible library
       run: ansible-galaxy collection install amazon.aws
 
-    - name: Create ansible ssh key
+    - name: Create ansible ssh key and vault passwd file
       run: |
         echo "${{ secrets.ANSIBLE_SSH_KEY }}" > /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
         chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
-
-    - name: Create vault password file
-      run: |
         echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > /home/runner/work/patu/patu/vault-secret.txt
-        chmod 0400 vault-secret.txt
+        chmod 0400 /home/runner/work/patu/patu/vault-secret.txt
 
     - name: Deploy EC2 Playbooks
       run: |
@@ -56,3 +53,42 @@ jobs:
 
     - name: Display Iperf3 Results for ${{ matrix.cni }}
       run: cat ./test/ansible/periodic/iperf-results-${{ matrix.cni }}.txt
+
+  clean:
+    name: terminate-tagged-ec2-instances
+    runs-on: ubuntu-latest
+    if: success() || failure()
+    needs: [ deploy-perf-scale ]
+    timeout-minutes: 10
+    env:
+      AWS_REGION: "us-east-1"
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      ANSIBLE_VAULT_PASSWORD_FILE: "/home/runner/work/patu/patu/vault-secret.txt"
+      ANSIBLE_PRIVATE_KEY_FILE: "/home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem"
+      ANSIBLE_REMOTE_USER: ${{ secrets.ANSIBLE_USER }}
+      ANSIBLE_HOST_KEY_CHECKING: "False"
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Ansible and dependencies
+      run: pip3.10 install boto boto3 ansible-vault ansible-core==2.13.3
+
+    - name: Install amazon.aws Ansible library
+      run: ansible-galaxy collection install amazon.aws
+
+    - name: Create ansible ssh key and vault passwd file
+      run: |
+        echo "${{ secrets.ANSIBLE_SSH_KEY }}" > /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
+        chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
+        echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > /home/runner/work/patu/patu/vault-secret.txt
+        chmod 0400 /home/runner/work/patu/patu/vault-secret.txt
+
+    - name: Deploy the EC2 Terminate Playbook
+      run: |
+        ansible-playbook -vv ./test/ansible/periodic/terminate-instances.yml

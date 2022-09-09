@@ -47,6 +47,6 @@
 - name: Refresh inventory to ensure new instaces exist in inventory
   meta: refresh_inventory
 
-- name: Pause for a few seconds to allow the instances to finish booting
+- name: Pause for 60 seconds to allow the instances to finish booting and become reachable
   pause:
-    seconds: 20
+    seconds: 60
