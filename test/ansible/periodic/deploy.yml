@@ -54,11 +54,3 @@
 - hosts: singleNodeCluster
   roles:
     - role: reset-kubeadm
-
-# TODO: cleanup using explicit node names from inventory instead of NodeTag
-# TODO: but what about a scenario where the runners are spun up but a step fails?
-#- hosts: localhost
-#  vars_files:
-#    - vars.yml
-#  roles:
-#    - role: terminate-ec2
