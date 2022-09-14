@@ -18,6 +18,7 @@
         "skops",
         "sockkey",
         "sockops",
+        "unmarshalling",
         "vishnoianil"
     ],
     "files.associations": {

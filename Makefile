@@ -13,7 +13,7 @@ go-build:
 	go build -ldflags "-s -w" -o ./dist/patud ./cmd/patu/daemon/patu-daemon.go
 
 go-lint:
-	golangci-lint run
+	golangci-lint run --go=1.17
 
 go-clean:
 	rm -Rf ./dist

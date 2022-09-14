@@ -9,6 +9,10 @@ load-sockops-redir-map:
 	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/sockops_redir_map type sockhash key 12 value 4 entries 65535 name sockops_redir_map
 unload-sockops-redir-map:
 	sudo rm -f $(PROG_MOUNT_PATH)/sockops_redir_map
+load-cni-config-map:
+	[ -f $(PROG_MOUNT_PATH)/cni_config_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/cni_config_map type hash key 4 value 16 entries 1024 name cni_config_map
+unload-cni-config-map:
+	sudo rm -f $(PROG_MOUNT_PATH)/cni_config_map
 
 # Progs related targets
 load-connect4:
@@ -38,9 +42,10 @@ detach-sendmsg4:
 unload-sendmsg4:
 	sudo rm $(PROG_MOUNT_PATH)/sendmsg4
 
-load-sockops: load-sockops-redir-map
+load-sockops: load-sockops-redir-map load-cni-config-map
 	sudo bpftool -m -p -d prog load patu_sockops.o $(PROG_MOUNT_PATH)/sockops \
-		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map \
+		map name cni_config_map pinned $(PROG_MOUNT_PATH)/cni_config_map
 attach-sockops:
 	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
 detach-sockops:
@@ -48,9 +53,10 @@ detach-sockops:
 unload-sockops:
 	sudo rm -rf $(PROG_MOUNT_PATH)/sockops
 
-load-sk-skb: load-sockops-redir-map
+load-sk-skb: load-sockops-redir-map load-cni-config-map
 	sudo bpftool -m -p -d prog load patu_skskb.o $(PROG_MOUNT_PATH)/skskb \
-		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map \
+		map name cni_config_map pinned $(PROG_MOUNT_PATH)/cni_config_map
 attach-sk-skb:
 	sudo bpftool -m -p -d prog attach pinned $(PROG_MOUNT_PATH)/skskb stream_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
 detach-sk-skb:
@@ -58,9 +64,10 @@ detach-sk-skb:
 unload-sk-skb:
 	sudo rm $(PROG_MOUNT_PATH)/skskb
 
-load-sk-msg: load-sockops-redir-map
+load-sk-msg: load-sockops-redir-map load-cni-config-map
 	sudo bpftool -m -p -d prog load patu_skmsg.o $(PROG_MOUNT_PATH)/skmsg \
-		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map
+		map name sockops_redir_map pinned $(PROG_MOUNT_PATH)/sockops_redir_map \
+		map name cni_config_map pinned $(PROG_MOUNT_PATH)/cni_config_map
 attach-sk-msg:
 	sudo bpftool -m -p -d prog attach pinned $(PROG_MOUNT_PATH)/skmsg msg_verdict pinned $(PROG_MOUNT_PATH)/sockops_redir_map
 detach-sk-msg:

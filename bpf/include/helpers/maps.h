@@ -25,9 +25,16 @@
 
 #define MAX_ENTRIES 65535
 
-struct bpf_map {
+struct {
   __uint(type, BPF_MAP_TYPE_SOCKHASH);
   __uint(max_entries, MAX_ENTRIES);
   __type(key, struct socket_key);
   __type(value, __u32);
 } sockops_redir_map SEC(".maps");
+
+struct {
+  __uint(type, BPF_MAP_TYPE_HASH);
+  __uint(max_entries, 1024);
+  __type(key, enum cni_config_key);
+  __type(value, union cni_config_value);
+} cni_config_map SEC(".maps");

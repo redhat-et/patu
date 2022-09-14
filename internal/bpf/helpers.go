@@ -20,24 +20,27 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/cilium/ebpf"
+	"github.com/redhat-et/patu/configs"
 )
 
 const (
-	progPath	= "./bpf"
+	progPath = "./bpf"
 )
 
 func compileEbpfProg(debug bool) error {
 	cmd := exec.Command("make", "compile")
 	cmd.Dir = progPath
 	cmd.Env = os.Environ()
-	
+
 	if debug {
 		cmd.Env = append(cmd.Env, "DEBUG=1")
 	}
-	
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	err := cmd.Run()
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
@@ -53,14 +56,14 @@ func loadBpfProg(debug bool) error {
 	cmd := exec.Command("make", "load")
 	cmd.Dir = progPath
 	cmd.Env = os.Environ()
-	
+
 	if debug {
 		cmd.Env = append(cmd.Env, "DEBUG=1")
 	}
-	
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	err := cmd.Run()
 	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
@@ -109,5 +112,26 @@ func unloadBpfProg() error {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
 	fmt.Println("eBPF programs unloaded successfully.")
+	return nil
+}
+
+func getPinnedMap(mapMountPath string) (*ebpf.Map, error) {
+	configMap, err := ebpf.LoadPinnedMap(configs.ConfigMapFsMount, &ebpf.LoadPinOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("Error loading config map %s : %v", configs.ConfigMapFsMount, err)
+	}
+	return configMap, nil
+}
+
+func updateConfigMap(mapMountPath string, mapKey uint32, mapValue []byte) error {
+	
+	if configMap, _:= getPinnedMap(mapMountPath); configMap == nil {
+		return fmt.Errorf("Failed to get pinned config map %s", mapMountPath)
+
+	} else {
+		if err := configMap.Update(mapKey, mapValue, ebpf.UpdateAny); err != nil {
+			return fmt.Errorf("Failed to updated config map with key %d, value %x. Error = %v", mapKey, mapValue, err)
+		}
+	}
 	return nil
 }

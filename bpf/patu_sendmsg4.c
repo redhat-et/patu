@@ -19,7 +19,6 @@ limitations under the License.
 #include "include/helpers/helpers.h"
 
 __section("cgroup/sendmsg4") int patu_sendmsg4(struct bpf_sock_addr *ctx) {
-  int pid = get_current_pid_tgid() >> 32;
   return 1;
 }
 

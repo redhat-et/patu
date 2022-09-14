@@ -24,9 +24,13 @@ load-sockops-redir-map:
 	make -f Makefile.load load-sockops-redir-map
 unload-sockops-redir-map:
 	make -f Makefile.load unload-sockops-redir-map
+load-cni-config-map:
+	make -f Makefile.load load-cni-config-map
+unload-cni-config-map:
+	make -f Makefile.load unload-cni-config-map
 
-load-maps: load-sockops-redir-map
-unload-maps: unload-sockops-redir-map
+load-maps: load-sockops-redir-map load-cni-config-map
+unload-maps: unload-sockops-redir-map unload-cni-config-map
 
 # Passthrough targets.
 load-connect4:
