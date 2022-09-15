@@ -1,12 +1,13 @@
-name: Patu Periodic Cloud Performance and Scale Testing
+name: Patu Performance Triggerable Workflow
 
 on:
-  schedule:
-    - cron: '0 14 * * *'
+  issue_comment:
+    types: [created]
 
 jobs:
   deploy-perf-scale:
     name: deploy-perf-scale
+    if: contains(github.event.comment.body, '/run_bbq') && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -15,13 +16,12 @@ jobs:
         cni: ["patu", "flannel"]
         kube-distribution: ["kubeadm"]
     env:
-      JOB_NAME: "patu-periodic-perfscale-${{ matrix.k8s-distro }}-${{ matrix.cni }}"
+      JOB_NAME: "patu-triggered-perfscale-${{ matrix.k8s-distro }}-${{ matrix.cni }}"
       MATRIX_CNI: ${{ matrix.cni }}
       KUBE_DIST: ${{ matrix.k8s-distro }}
       AWS_REGION: "us-east-1"
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      PERIODIC_ROOT: "/home/runner/work/patu/patu/test/ansible/periodic/"
       ANSIBLE_VAULT_PASSWORD_FILE: "/home/runner/work/patu/patu/vault-secret.txt"
       ANSIBLE_PRIVATE_KEY_FILE: "/home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem"
       ANSIBLE_REMOTE_USER: ${{ secrets.ANSIBLE_USER }}
