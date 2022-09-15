@@ -17,6 +17,7 @@
 set -x
 shopt -s expand_aliases
 
+
 KUBECONFIG_TESTS="kubeconfig_tests.conf"
 
 GINKGO_FOCUS="\[sig-network\]"
