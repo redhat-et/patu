@@ -17,14 +17,17 @@
 package main
 
 import (
-	"cmd/patu/app/configs"
-	"cmd/patu/app/internal/bpf"
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"runtime"
 	"strings"
 	"syscall"
+
+	"github.com/redhat-et/patu/cmd/patu/daemon/kubehelper"
+	"github.com/redhat-et/patu/configs"
+	"github.com/redhat-et/patu/internal/bpf"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -46,6 +49,21 @@ var rootCmd = &cobra.Command{
 		if err = bpf.LoadAndAttachBPFProg(); err != nil {
 			return fmt.Errorf(err.Error());
 		}
+		
+		var subnetIp net.IP
+		if client := kubehelper.GetKubeClient(); client == nil {
+			return fmt.Errorf("Failed to get kube client.")
+		} else {
+			subnetIp, _, _= kubehelper.GetSubnetFromConfig(client)
+		}
+		
+		if subnetIp != nil {
+			if err := bpf.UpdateMapWithCidrConfig(subnetIp); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("Not able to get patu subnet CIDR.")
+		}
 
 		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
@@ -54,6 +72,7 @@ var rootCmd = &cobra.Command{
 		if err = bpf.UnloadBpfProg(); err != nil {
 			return fmt.Errorf(err.Error());
 		}
+
 		return nil
 	},
 }

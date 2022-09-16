@@ -59,12 +59,36 @@ struct socket_key {
   __u16 dst_port;
 };
 
+enum cni_config_key { SUBNET_IP, CIDR, DEBUG };
+
+union cni_config_value {
+  struct {
+    __u32 pad1;
+    __u32 pad2;
+    __u32 pad3;
+    __u32 ipv4;
+  };
+  struct {
+    __u32 ipv6p1;
+    __u32 ipv6p2;
+    __u32 ipv6p3;
+    __u32 ipv6p4;
+  };
+  struct {
+    __u32 nil1;
+    __u32 nil2;
+    __u32 nil3;
+    __u32 debug;
+  };
+};
+
 static __u64 BPF_FUNC(get_current_pid_tgid);
 static __u64 BPF_FUNC(get_current_uid_gid);
 static void BPF_FUNC(trace_printk, const char *fmt, int fmt_size, ...);
-static int BPF_FUNC(sock_hash_update, struct bpf_sock_ops *skops,
-                    struct bpf_map *map, void *key, __u64 flags);
-static long BPF_FUNC(sk_redirect_hash, struct __sk_buff *skb,
-                     struct bpf_map *map, void *key, __u64 flag);
-static long BPF_FUNC(msg_redirect_hash, struct sk_msg_md *msg,
-                     struct bpf_map *map, void *key, __u64 flags);
+static void *BPF_FUNC(map_lookup_elem, void *map, const void *key);
+static int BPF_FUNC(sock_hash_update, struct bpf_sock_ops *skops, void *map,
+                    void *key, __u64 flags);
+static long BPF_FUNC(sk_redirect_hash, struct __sk_buff *skb, void *map,
+                     void *key, __u64 flag);
+static long BPF_FUNC(msg_redirect_hash, struct sk_msg_md *msg, void *map,
+                     void *key, __u64 flags);

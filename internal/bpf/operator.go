@@ -16,8 +16,15 @@
 package bpf
 
 import (
-	"cmd/patu/app/configs"
 	"fmt"
+	"net"
+
+	"github.com/redhat-et/patu/configs"
+)
+
+const (
+	SUBNET_IP int = iota
+	DEBUG
 )
 
 func CompileEbpfProg() error {
@@ -46,6 +53,14 @@ func UnloadBpfProg() error {
 	}
 	if err = unloadBpfProg(); err != nil {
 		return fmt.Errorf("eBPF program unloading failed with :  %v", err)
+	}
+	return nil
+}
+
+func UpdateMapWithCidrConfig(ip net.IP) error {
+
+	if err := updateConfigMap(configs.ConfigMapFsMount, uint32(SUBNET_IP), ip); err != nil {
+		return err
 	}
 	return nil
 }

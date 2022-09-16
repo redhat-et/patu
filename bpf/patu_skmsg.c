@@ -19,12 +19,7 @@ limitations under the License.
 #include "include/helpers/helpers.h"
 #include "include/helpers/maps.h"
 
-static inline int is_ipv4_endpoint(__u32 ip) {
-  /* Check for static pod network 10.200.0.0/16*/
-  int netip = bpf_htonl(0x0ac80000);
-
-  return ((ip & bpf_htonl(0xffff0000)) == (netip & bpf_htonl(0xffff0000)));
-}
+static int subnetIP = 0;
 
 static inline void extract_socket_key_v4(struct sk_msg_md *msg,
                                          struct socket_key *sockkey) {
@@ -35,8 +30,23 @@ static inline void extract_socket_key_v4(struct sk_msg_md *msg,
   sockkey->dst_port = (bpf_htonl(msg->local_port)) >> 16;
 }
 
+static inline int in_subnet_range(__u32 ip) {
+  if (!subnetIP) {
+    enum cni_config_key key = SUBNET_IP;
+    union cni_config_value *ipAddr = map_lookup_elem(&cni_config_map, &key);
+    if (ipAddr) {
+      // Ip written in config map is in host order
+      subnetIP = ipAddr->ipv4;
+    }
+  }
+  if (subnetIP != 0) {
+    return ((ip & bpf_htonl(0xffff0000)) == (subnetIP & bpf_htonl(0xffff0000)));
+  }
+  return 0;
+}
+
 __section("sk_msg") int patu_skmsg(struct sk_msg_md *msg) {
-  if (is_ipv4_endpoint(msg->remote_ip4)) {
+  if (in_subnet_range(msg->remote_ip4)) {
 
     struct socket_key sockkey = {};
     extract_socket_key_v4(msg, &sockkey);

@@ -19,3 +19,7 @@ var (
 	Debug		= false
 	Compile 	= false
 )
+
+const (
+	ConfigMapFsMount = "/sys/fs/bpf/cni_config_map"
+)
