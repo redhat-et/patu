@@ -1,0 +1,48 @@
+---
+# tasks file for install-runtime
+
+- name: Update repo cache
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: Installing runtime dependencies
+  become: yes
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: latest
+
+- name: Setup docker-ce repos
+  become: true
+  shell: |
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+- name: Update repo cache
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: Install Docker
+  become: true
+  apt:
+    name: docker-ce
+
+- name: Adding existing user to group Docker
+  become: yes
+  user:
+    name: '{{ ansible_user }}'
+    groups: docker
+    append: yes
+
+- name: Validate runtime
+  become: true
+  shell: |
+    docker ps

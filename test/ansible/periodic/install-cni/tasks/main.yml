@@ -4,10 +4,35 @@
   command: kubectl get pods --all-namespaces
 
 ### Patu Installer Section ###
+- name: Store the kernel version
+  shell: |
+    uname -r | head -c 4
+  register: kernel
+  when: MATRIX_CNI == "patu"
+
+- name: Write robot secret to file
+  ansible.builtin.copy:
+    content: "{{ quay_robot_pass }}"
+    dest: /home/{{ ansible_user }}/qpass.txt
+  when: MATRIX_CNI == "patu"
+
+- name: Log into quay as a robot
+  become: yes
+  shell: |
+    cat /home/{{ ansible_user }}/qpass.txt | docker login quay.io --username {{ quay_robot_user }} --password-stdin
+  when: MATRIX_CNI == "patu"
+
 - name: Copy the Patu repo to the remote host
   copy:
     src: ../../../../patu/
     dest: /home/{{ ansible_user }}/patu/
+  when: MATRIX_CNI == "patu"
+
+- name: Replace the patu image with the robot account build
+  replace:
+    path: "/home/{{ ansible_user }}/patu/deploy/patu.yaml"
+    regexp: 'ghcr.io/redhat-et/patu:latest'
+    replace: "quay.io/networkstatic/patu:latest"
   when: MATRIX_CNI == "patu"
 
 - name: Change file ownership, group and permissions
@@ -16,6 +41,31 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: "0755"
+  when: MATRIX_CNI == "patu"
+
+- name: Build Patu
+  become: yes
+  shell: |
+    docker build --build-arg kernel={{ kernel.stdout }} -f /home/{{ ansible_user }}/patu/deploy/Dockerfile -t patu:latest . > /home/{{ ansible_user }}/build-log.txt 2>&1 &
+  when: MATRIX_CNI == "patu"
+  args:
+    chdir: /home/{{ ansible_user }}/patu/
+
+- name: Loop until the patu image is available
+  shell: docker image ls | grep patu
+  become: yes
+  register: results
+  until: results.rc == 0
+  retries: 60
+  delay: 30
+  when: MATRIX_CNI == "patu"
+
+- name: Push Patu with robot account to quay
+  become: yes
+  shell: |
+    cat /home/{{ ansible_user }}/qpass.txt | docker login quay.io --username {{ quay_robot_user }} --password-stdin
+    docker tag patu:latest quay.io/networkstatic/patu
+    docker push quay.io/networkstatic/patu:latest
   when: MATRIX_CNI == "patu"
 
 - name: Install KPNG and Patu
