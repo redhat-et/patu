@@ -1,6 +1,5 @@
 ---
 # tasks file for install-kubeadm
-
 - name: Update repo cache
   become: yes
   apt:
@@ -67,7 +66,7 @@
   shell: sudo apt install -y kubeadm={{ K8S_VERSION }} kubelet={{ K8S_VERSION }} kubectl={{ K8S_VERSION }}
 
 - name: Deploy kubeadm for the Patu matrix with kubeproxy disabled
-  shell: sudo kubeadm init --upload-certs --pod-network-cidr=10.200.0.0/16 --v=6 --skip-phases=addon/kube-proxy
+  shell: sudo kubeadm init --upload-certs --pod-network-cidr=10.200.0.0/16 --v=6 --skip-phases=addon/kube-proxy --cri-socket /var/run/crio/crio.sock
   when:  MATRIX_CNI == "patu"
 
 - name: Deploy kubeadm for the Flannel CNI matrix with kubeproxy enabled
