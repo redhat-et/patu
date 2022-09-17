@@ -18,8 +18,8 @@ set -x
 shopt -s expand_aliases
 
 : "${E2E_GO_VERSION:="1.17.3"}"
-: "${KIND_VERSION:="v0.11.1"}"
-: "${E2E_K8S_VERSION:="v1.23.3"}"
+: "${KIND_VERSION:="v0.14.0"}"
+: "${E2E_K8S_VERSION:="v1.25.0"}"
 : "${E2E_TIMEOUT_MINUTES:=100}"
 : "${KINDEST_NODE_IMAGE:="kindest/node"}"
 ## Ensure that CLUSTER_CIDR and SERVICE_CLUSTER_IP_RANGE don't overlap
