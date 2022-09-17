@@ -27,14 +27,14 @@
 
 struct {
   __uint(type, BPF_MAP_TYPE_SOCKHASH);
-  __uint(max_entries, MAX_ENTRIES);
   __type(key, struct socket_key);
   __type(value, __u32);
+  __uint(max_entries, MAX_ENTRIES);
 } sockops_redir_map SEC(".maps");
 
 struct {
   __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, 1024);
   __type(key, enum cni_config_key);
   __type(value, union cni_config_value);
+  __uint(max_entries, 1024);
 } cni_config_map SEC(".maps");

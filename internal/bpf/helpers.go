@@ -49,11 +49,34 @@ func compileEbpfProg(debug bool) error {
 	return nil
 }
 
+func loadBpfMaps(debug bool) error {
+	if os.Getuid() != 0 {
+		return fmt.Errorf("eBPF map loading requires root privileges.")
+	}
+	cmd := exec.Command("make", "load-maps")
+	cmd.Dir = progPath
+	cmd.Env = os.Environ()
+
+	if debug {
+		cmd.Env = append(cmd.Env, "DEBUG=1")
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
+		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
+	}
+	fmt.Println("eBPF maps loaded successfully.")
+	return nil
+}
+
 func loadBpfProg(debug bool) error {
 	if os.Getuid() != 0 {
 		return fmt.Errorf("eBPF program loading requires root privileges.")
 	}
-	cmd := exec.Command("make", "load")
+	cmd := exec.Command("make", "load-prog")
 	cmd.Dir = progPath
 	cmd.Env = os.Environ()
 
@@ -76,7 +99,7 @@ func attachBpfProg() error {
 	if os.Getuid() != 0 {
 		return fmt.Errorf("eBPF program loading requires root privileges.")
 	}
-	cmd := exec.Command("make", "attach")
+	cmd := exec.Command("make", "attach-prog")
 	cmd.Dir = progPath
 	cmd.Env = os.Environ()
 	cmd.Stdout = os.Stdout
@@ -90,7 +113,7 @@ func attachBpfProg() error {
 }
 
 func detachBpfProg() error {
-	cmd := exec.Command("make", "detach")
+	cmd := exec.Command("make", "detach-prog")
 	cmd.Dir = progPath
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -103,7 +126,7 @@ func detachBpfProg() error {
 }
 
 func unloadBpfProg() error {
-	cmd := exec.Command("make", "unload")
+	cmd := exec.Command("make", "unload-prog")
 	cmd.Dir = progPath
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -112,6 +135,19 @@ func unloadBpfProg() error {
 		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
 	}
 	fmt.Println("eBPF programs unloaded successfully.")
+	return nil
+}
+
+func unloadBpfMaps() error {
+	cmd := exec.Command("make", "unload-maps")
+	cmd.Dir = progPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if code := cmd.ProcessState.ExitCode(); code != 0 || err != nil {
+		return fmt.Errorf("\"%s \" failed with code: %d, err: %v", strings.Join(cmd.Args, " "), code, err)
+	}
+	fmt.Println("eBPF maps unloaded successfully.")
 	return nil
 }
 

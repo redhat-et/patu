@@ -34,6 +34,15 @@ func CompileEbpfProg() error {
 	return nil
 }
 
+func LoadBPFMaps() error {
+	var err error
+	if err = loadBpfMaps(configs.Debug); err != nil {
+		return fmt.Errorf("eBPF map loading failed with : %v", err)
+	}
+
+	return nil
+}
+
 func LoadAndAttachBPFProg() error {
 	var err error
 	if err = loadBpfProg(configs.Debug); err != nil {
@@ -53,6 +62,14 @@ func UnloadBpfProg() error {
 	}
 	if err = unloadBpfProg(); err != nil {
 		return fmt.Errorf("eBPF program unloading failed with :  %v", err)
+	}
+	return nil
+}
+
+func UnloadBpfMaps() error {
+	var err error
+	if err = unloadBpfMaps(); err != nil {
+		return fmt.Errorf("eBPF maps unloading failed with :  %v", err)
 	}
 	return nil
 }
