@@ -88,6 +88,8 @@ jobs:
         chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
         echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > /home/runner/work/patu/patu/vault-secret.txt
         chmod 0400 /home/runner/work/patu/patu/vault-secret.txt
+        echo "${{ secrets.ANSIBLE_VARS }}" > /home/runner/work/patu/patu/test/ansible/periodic/ansible-vars.txt
+        chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/ansible-vars.txt
 
     - name: Deploy the EC2 Terminate Playbook
       run: |
