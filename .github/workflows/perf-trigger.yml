@@ -7,7 +7,7 @@ on:
 jobs:
   deploy-perf-scale:
     name: deploy-perf-scale
-    if: contains(github.event.comment.body, '/run_bbq') && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'CONTRIBUTORS')
+    if: contains(github.event.comment.body, '/run_bbq') && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'CONTRIBUTOR')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -51,6 +51,8 @@ jobs:
         chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
         echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > /home/runner/work/patu/patu/vault-secret.txt
         chmod 0400 /home/runner/work/patu/patu/vault-secret.txt
+        echo "${{ secrets.ANSIBLE_VARS }}" > /home/runner/work/patu/patu/test/ansible/periodic/ansible-vars.txt
+        chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/ansible-vars.txt
 
     - name: Deploy EC2 Playbooks
       run: |
