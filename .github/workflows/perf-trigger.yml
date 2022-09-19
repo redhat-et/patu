@@ -5,6 +5,21 @@ on:
     types: [created, edited]
 
 jobs:
+  job-notification:
+    name: set-pending-job-notifiation
+    runs-on: ubuntu-latest
+    steps:
+    - name: Add comment to the triggering issue number
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: 'Performance tests have been requested: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+          });
+
   deploy-perf-scale:
     name: deploy-perf-scale
     if: |
