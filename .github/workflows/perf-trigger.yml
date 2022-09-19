@@ -75,8 +75,6 @@ jobs:
         chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
         echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > /home/runner/work/patu/patu/vault-secret.txt
         chmod 0400 /home/runner/work/patu/patu/vault-secret.txt
-        echo "${{ secrets.ANSIBLE_VARS }}" > /home/runner/work/patu/patu/test/ansible/periodic/vars.txt
-        chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/vars.txt
 
     - name: Deploy EC2 Playbooks
       run: |
