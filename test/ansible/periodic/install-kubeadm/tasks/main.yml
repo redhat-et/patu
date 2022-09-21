@@ -1,5 +1,6 @@
 ---
 # tasks file for install-kubeadm
+
 - name: Update repo cache
   become: yes
   apt:
@@ -62,7 +63,7 @@
 
 - name: Install kube binaries
   vars:
-    K8S_VERSION: "1.24.4-00"
+    K8S_VERSION: "1.25.0-00"
   shell: sudo apt install -y kubeadm={{ K8S_VERSION }} kubelet={{ K8S_VERSION }} kubectl={{ K8S_VERSION }}
 
 - name: Deploy kubeadm for the Patu matrix with kubeproxy disabled

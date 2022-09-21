@@ -7,11 +7,6 @@
 
 - hosts: singleNodeCluster
   roles:
-    - role: install-runtime
-      when: MATRIX_CNI == "patu"
-
-- hosts: singleNodeCluster
-  roles:
     - role: install-kubeadm
       environment:
         KUBECONFIG: /home/{{ ansible_user }}/.kube/config
