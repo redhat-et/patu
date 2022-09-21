@@ -17,7 +17,7 @@
 set -x
 shopt -s expand_aliases
 
-: "${E2E_GO_VERSION:="1.17.3"}"
+: "${E2E_GO_VERSION:="1.18.6"}"
 : "${KIND_VERSION:="v0.14.0"}"
 : "${E2E_K8S_VERSION:="v1.25.0"}"
 : "${E2E_TIMEOUT_MINUTES:=100}"

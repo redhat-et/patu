@@ -4,6 +4,7 @@ on:
   issue_comment:
     types: [created, edited]
 
+
 jobs:
   job-notification:
     name: set-pending-job-notifiation
@@ -22,16 +23,67 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: 'Performance tests have been requested: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+            body: 'Performance tests have been requested :fire: [Requested Performance Test ${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) :fire:',
           });
+
+  build-image:
+    name: Build Patu Image
+    needs: [ job-notification ]
+    if: success()
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: quay.io
+      REPOSITORY: networksatatic
+      IMAGE_NAME: patu
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      # Workaround: https://github.com/docker/build-push-action/issues/461
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
+
+      - name: Login into Quay registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.QUAY_ROBOT_USERNAME }}
+          password: ${{ secrets.QUAY_ROBOT_PASSWORD }}
+
+      # Extract metadata (tags, labels) for Docker
+      # https://github.com/docker/metadata-action
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
+          tags: |
+              # set latest tag for default branch
+              type=raw,value=latest
+
+      - name: Build and Push image to Quay
+        id: build-and-push
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
+        with:
+          context: .
+          push: true
+          file: deploy/Dockerfile
+          build-args: kernel=5.15
+          tags: quay.io/networkstatic/patu:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-perf-scale:
     name: deploy-perf-scale
-    if: |
-      contains(github.event.comment.body, '/run_bbq') &&
-      ( github.event.comment.author_association == 'OWNER' ||
-      github.event.comment.author_association == 'MEMBER' ||
-      github.event.comment.author_association != 'CONTRIBUTOR' )
+    needs: [ build-image ]
+    if: success()
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -83,7 +135,7 @@ jobs:
     - name: Display Iperf3 Results for ${{ matrix.cni }}
       run: cat ./test/ansible/periodic/iperf-results-${{ matrix.cni }}.txt
 
-# Temp disable of cleanup for node debugging
+# Temp disable for debugging nodes
 #  clean:
 #    name: terminate-tagged-ec2-instances
 #    runs-on: ubuntu-latest
