@@ -91,11 +91,6 @@ load-prog: load-sockops load-sk-msg load-sendmsg4 load-recvmsg4 # load-connect4 
 attach-prog: attach-sockops attach-sk-msg attach-sendmsg4 attach-recvmsg4 # attach-connect4 attach-sk-skb
 detach-prog: detach-sk-msg detach-sockops detach-sendmsg4 detach-recvmsg4 # detach-connect4 detach-sk-skb
 unload-prog: unload-sk-msg unload-sockops unload-sendmsg4 unload-recvmsg4 # unload-connect4 unload-sk-skb
-
-load: load-maps load-prog
-attach: attach-prog
-detach: detach-prog
-unload: unload-maps unload-prog 
 	make -f Makefile.compile clean-obj
 
 pre-commit-checks: lint compile

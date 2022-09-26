@@ -46,7 +46,7 @@ var rootCmd = &cobra.Command{
 			}	
 		}
 
-		if err = bpf.LoadAndAttachBPFProg(); err != nil {
+		if err = bpf.LoadBPFMaps(); err != nil {
 			return fmt.Errorf(err.Error());
 		}
 		
@@ -65,11 +65,18 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("Not able to get patu subnet CIDR.")
 		}
 
+		if err = bpf.LoadAndAttachBPFProg(); err != nil {
+			return fmt.Errorf(err.Error());
+		}
+
 		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 		<-ch
 	
 		if err = bpf.UnloadBpfProg(); err != nil {
+			return fmt.Errorf(err.Error());
+		}
+		if err = bpf.UnloadBpfMaps(); err != nil {
 			return fmt.Errorf(err.Error());
 		}
 
