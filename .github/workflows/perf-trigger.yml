@@ -130,7 +130,10 @@ jobs:
 
     - name: Deploy EC2 Playbooks
       run: |
-        ansible-playbook -vv ./test/ansible/periodic/deploy.yml --extra-vars "MATRIX_CNI=${{ matrix.cni }}" -i /home/runner/work/patu/patu/test/ansible/periodic/inventory.txt --private-key /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
+        ansible-playbook -vv ./test/ansible/periodic/deploy.yml \
+        --extra-vars "MATRIX_CNI=${{ matrix.cni }} WORKFLOW_TYPE=triggered" \
+        -i /home/runner/work/patu/patu/test/ansible/periodic/inventory.txt \
+        --private-key /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
 
     - name: Display Iperf3 Results for ${{ matrix.cni }}
       run: cat ./test/ansible/periodic/iperf-results-${{ matrix.cni }}.txt

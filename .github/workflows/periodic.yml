@@ -21,7 +21,6 @@ jobs:
       AWS_REGION: "us-east-1"
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      PERIODIC_ROOT: "/home/runner/work/patu/patu/test/ansible/periodic/"
       ANSIBLE_VAULT_PASSWORD_FILE: "/home/runner/work/patu/patu/vault-secret.txt"
       ANSIBLE_PRIVATE_KEY_FILE: "/home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem"
       ANSIBLE_REMOTE_USER: ${{ secrets.ANSIBLE_USER }}
@@ -49,7 +48,10 @@ jobs:
 
     - name: Deploy EC2 Playbooks
       run: |
-        ansible-playbook -vv ./test/ansible/periodic/deploy.yml --extra-vars "MATRIX_CNI=${{ matrix.cni }}" -i /home/runner/work/patu/patu/test/ansible/periodic/inventory.txt --private-key /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
+        ansible-playbook -vv ./test/ansible/periodic/deploy.yml \
+        --extra-vars "MATRIX_CNI=${{ matrix.cni }}" \
+        -i /home/runner/work/patu/patu/test/ansible/periodic/inventory.txt \
+        --private-key /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
 
     - name: Display Iperf3 Results for ${{ matrix.cni }}
       run: cat ./test/ansible/periodic/iperf-results-${{ matrix.cni }}.txt
@@ -88,8 +90,6 @@ jobs:
         chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/patu-ci.pem
         echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > /home/runner/work/patu/patu/vault-secret.txt
         chmod 0400 /home/runner/work/patu/patu/vault-secret.txt
-        echo "${{ secrets.ANSIBLE_VARS }}" > /home/runner/work/patu/patu/test/ansible/periodic/ansible-vars.txt
-        chmod 0400 /home/runner/work/patu/patu/test/ansible/periodic/ansible-vars.txt
 
     - name: Deploy the EC2 Terminate Playbook
       run: |

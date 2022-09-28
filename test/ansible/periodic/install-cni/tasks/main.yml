@@ -10,12 +10,14 @@
     dest: /home/{{ ansible_user }}/patu/
   when: MATRIX_CNI == "patu"
 
-- name: Replace the patu image with the robot account build
+- name: Replace the patu image with the robot account build when a PR build only
   replace:
     path: "/home/{{ ansible_user }}/patu/deploy/patu.yaml"
     regexp: 'ghcr.io/redhat-et/patu:latest'
     replace: "quay.io/networkstatic/patu:latest"
-  when: MATRIX_CNI == "patu"
+  when:
+    - MATRIX_CNI == "patu"
+    - WORKFLOW_TYPE == "triggered"
 
 - name: Change file ownership, group and permissions
   ansible.builtin.file:
