@@ -20,6 +20,9 @@
         args: ["-s"]
     EOF
 
+- name: Wait for Iperf Server pod status to be ready
+  shell: kubectl wait --for=condition=ready pods -l app=iperf3-svr --timeout=90s
+
 - name: Pause for the iperf3 server to initialize
   pause:
     seconds: 10
