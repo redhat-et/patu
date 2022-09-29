@@ -26,7 +26,8 @@
         "inet.h": "c",
         "in.h": "c",
         "bpf.h": "c",
-        "swab.h": "c"
+        "swab.h": "c",
+        "maps.h": "c"
     },
     "docker.imageBuildContextPath": ".",
     "editor.formatOnSave": true
