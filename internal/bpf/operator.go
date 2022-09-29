@@ -48,7 +48,23 @@ func LoadAndAttachBPFProg() error {
 	if err = loadBpfProg(configs.Debug); err != nil {
 		return fmt.Errorf("eBPF program loading failed with : %v", err)
 	}
+	if err = attachBpfProg(); err != nil {
+		return fmt.Errorf("eBPF program attach failed with : %v", err)
+	}
+	return nil
+}
 
+func LoadBPFProg() error {
+	var err error
+	if err = loadBpfProg(configs.Debug); err != nil {
+		return fmt.Errorf("eBPF program loading failed with : %v", err)
+	}
+
+	return nil
+}
+
+func AttachBPFProg() error {
+	var err error
 	if err = attachBpfProg(); err != nil {
 		return fmt.Errorf("eBPF program attach failed with : %v", err)
 	}

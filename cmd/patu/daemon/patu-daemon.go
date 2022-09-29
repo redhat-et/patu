@@ -46,10 +46,21 @@ var rootCmd = &cobra.Command{
 			}	
 		}
 
+		/*
+		Skip explicit creation of map using bpftools. Maps created through bpftools
+		are not BTF enabled. If in the maps defined in the programs are using BTF
+		types, loader will create BTF enabled maps.
+		NOTE: Map type (sockhash and sockmap) doesn't support BTF types, so loader will
+		attempt to create map with BTF but fail and resort to creating map without BTF.
+		/*
 		if err = bpf.LoadBPFMaps(); err != nil {
 			return fmt.Errorf(err.Error());
-		}
+		}*/
 		
+		if err = bpf.LoadBPFProg(); err != nil {
+			return fmt.Errorf(err.Error());
+		}
+
 		var subnetIp net.IP
 		if client := kubehelper.GetKubeClient(); client == nil {
 			return fmt.Errorf("Failed to get kube client.")
@@ -65,7 +76,7 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("Not able to get patu subnet CIDR.")
 		}
 
-		if err = bpf.LoadAndAttachBPFProg(); err != nil {
+		if err = bpf.AttachBPFProg(); err != nil {
 			return fmt.Errorf(err.Error());
 		}
 
