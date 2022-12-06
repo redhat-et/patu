@@ -1,0 +1,89 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kpng
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kpng
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:node-proxier
+subjects:
+- kind: ServiceAccount
+  name: kpng
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  creationTimestamp: null
+  labels:
+    app: kpng
+  name: kpng
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: kpng
+  template:
+    metadata:
+      labels:
+        app: kpng
+    spec:
+      # to enable progressive deployment on existing cluster you can use node labels:
+      #nodeSelector:
+      #  kpng: kpng
+      serviceAccountName: kpng
+      hostNetwork: true
+      # so that kpng always runs on the controlplane nodes...
+      tolerations:
+      - operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      # only spin up bpftools image if ebpf is the selected backend.
+      # spinup single container when running in one process
+      - image: ghcr.io/redhat-et/kpng:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: GOLANG_PROTOBUF_REGISTRATION_CONFLICT
+          value: warn
+        name: kpng
+        volumeMounts:
+        - name: empty
+          mountPath: /k8s
+        - mountPath: /var/lib/kpng
+          name: kpng-config
+        args:
+        - kube
+        - --kubeconfig=/var/lib/kpng/admin.conf
+        - to-api
+        - --listen=unix:///k8s/proxy.sock
+      - image: ghcr.io/redhat-et/kpng:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: GOLANG_PROTOBUF_REGISTRATION_CONFLICT
+          value: warn
+        name: kpng-nft
+        securityContext:
+            privileged: true
+        volumeMounts:
+        - name: empty
+          mountPath: /k8s
+        - name: modules
+          mountPath: /lib/modules
+          readOnly: true
+        args: ['local', '--api=unix:///k8s/proxy.sock', 'to-nft', '--v=4']
+      volumes:
+      - name: empty
+        emptyDir: {}
+      - name: modules
+        hostPath:
+          path: /lib/modules
+      - name: kpng-config
+        configMap:
+          name: kpng
