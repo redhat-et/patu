@@ -36,7 +36,7 @@
 
 KUBECONFIG=${KUBECONFIG:="/etc/kubernetes/admin.conf"}
 PATU_CONFIG=${PATU_CONFIG:="deploy/patu.yaml"}
-KPNG_CONFIG=${KPNG_CONFIG:="deploy/kpngnft.yaml"}
+KPNG_CONFIG=${KPNG_CONFIG:="deploy/kpngebpf.yaml"}
 
 arg=$1
 opt=$2
