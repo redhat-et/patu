@@ -19,8 +19,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          repository: kubernetes-sigs/kpng
+          repository: vishnoianil/kpng.git
           path: kpng
+          ref: ebpf-nft
       
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
