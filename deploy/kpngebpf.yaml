@@ -62,7 +62,7 @@ spec:
         - name: bpf-log
           mountPath: /tracing
       - image: ghcr.io/redhat-et/kpng:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: GOLANG_PROTOBUF_REGISTRATION_CONFLICT
           value: warn
@@ -78,7 +78,7 @@ spec:
         - to-api
         - --listen=unix:///k8s/proxy.sock
       - image: ghcr.io/redhat-et/kpng:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: GOLANG_PROTOBUF_REGISTRATION_CONFLICT
           value: warn
