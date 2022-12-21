@@ -47,26 +47,16 @@ static inline int in_subnet_range(__u32 ip) {
 
 __section("sk_msg") int patu_skmsg(struct sk_msg_md *msg) {
 
-    struct socket_key sockkey = {};
-    print_info("*****************************");
-    print_info("[sk_msg] port: %X --> %X", msg->local_port, msg->remote_port);
-    print_info("[sk_msg] ip : %X --> %X", msg->local_ip4, msg->remote_ip4);
-
-    extract_socket_key_v4(msg, &sockkey);
-
-    print_info("[sk_msg] Key added."
-                 "port %X --> %X\n", sockkey.src_port, sockkey.dst_port);
-    print_info("[sk_msg] Key added."
-                 "ip %X --> %X\n", sockkey.src_ip, sockkey.dst_ip);
-
-    long result =
-        msg_redirect_hash(msg, &sockops_redir_map, &sockkey, BPF_F_INGRESS);
-    if (result) {
-      print_info("[sk_msg], %d packets redirected from source port %d "
-                 "to destination port %d", msg->size, sockkey.src_port , sockkey.dst_port);
-    }
-    print_info("*****************************");
-    return SK_PASS;
+  struct socket_key sockkey = {};
+  extract_socket_key_v4(msg, &sockkey);
+  long result =
+      msg_redirect_hash(msg, &sockops_redir_map, &sockkey, BPF_F_INGRESS);
+  if (result) {
+    print_info("[sk_msg], %d packets redirected from source port %d "
+               "to destination port %d",
+               msg->size, sockkey.src_port, sockkey.dst_port);
+  }
+  return SK_PASS;
 }
 
 char ____license[] __section("license") = "GPL";
