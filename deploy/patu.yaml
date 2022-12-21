@@ -48,14 +48,16 @@ data:
       "name": "patu-network",
       "type": "patu",
       "bridge": "patux",
+      "hairpinMode":true,
       "isGateway": true,
+      "isDefaultGateway":true,
       "ipam": {
         "type": "host-local",
         "ranges": [
-            [{ "subnet": "10.200.0.0/16" }]
+            [{ "subnet": "10.200.0.0/24" }]
         ],
         "routes": [
-            { "dst": "0.0.0.0/0" }
+            { "dst": "10.200.0.0/16" }
         ]
       }
     }
@@ -88,6 +90,8 @@ spec:
         - -f
         - /cni/patu
         - /opt/cni/bin/patu
+        securityContext:
+          privileged: true
         volumeMounts:
           - name: host-opt-cni-bin
             mountPath: /opt/cni/bin/
@@ -100,6 +104,8 @@ spec:
         - -f
         - /etc/patu/patu-cni-conf.json
         - /etc/cni/net.d/10-patu.conf
+        securityContext:
+          privileged: true
         volumeMounts:
           - name: host-etc-cni-net
             mountPath: /etc/cni/net.d
@@ -127,7 +133,8 @@ spec:
           privileged: true
         volumeMounts:
           - name: host-sys-fs-cgroup
-            mountPath: /sys/fs/cgroup
+            mountPath: /sys/fs/cgroup/unified
+            readOnly: true
           - name: host-opt-cni-bin
             mountPath: /opt/cni/bin
           - name: host-etc-cni-net
@@ -152,7 +159,7 @@ spec:
       volumes:
       - name: host-sys-fs-cgroup
         hostPath:
-          path: /sys/fs/cgroup
+          path: /sys/fs/cgroup/unified
       - name: host-proc
         hostPath:
           path: /proc
