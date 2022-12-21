@@ -45,15 +45,17 @@ import (
 	 types.NetConf
 	BrName       string `json:"bridge"`
 	IsGW         bool   `json:"isGateway"`
+	IsDefaultGW  bool   `json:"isDefaultGateway"`
 	ForceAddress bool   `json:"forceAddress"`
-	MTU          int    `json:"mtu"`
 	IPMasq       bool   `json:"ipMasq"`
+	MTU          int    `json:"mtu"`
 	HairpinMode  bool   `json:"hairpinMode"`
 }
  
 type gwInfo struct {
 	gws               []net.IPNet
 	family            int
+	defaultRouteFound bool
 }
 
  func loadNetConf(bytes []byte, envArgs string) (*NetConf, string, error) {
@@ -101,6 +103,24 @@ func calcGateways(result *current.Result, n *NetConf) (*gwInfo, *gwInfo, error) 
 		// to the selected IP address
 		if ipc.Gateway == nil && n.IsGW {
 			ipc.Gateway = calcGatewayIP(&ipc.Address)
+		}
+
+		// Add a default route for this family using the current
+		// gateway address if necessary.
+		if n.IsDefaultGW && !gws.defaultRouteFound {
+			for _, route := range result.Routes {
+				if route.GW != nil && defaultNet.String() == route.Dst.String() {
+					gws.defaultRouteFound = true
+					break
+				}
+			}
+			if !gws.defaultRouteFound {
+				result.Routes = append(
+					result.Routes,
+					&types.Route{Dst: *defaultNet, GW: ipc.Gateway},
+				)
+				gws.defaultRouteFound = true
+			}
 		}
 
 		// Append this gateway address to the list of gateways
@@ -289,7 +309,10 @@ func enableIPForward(family int) error {
 	 }
  
 	 isLayer3 := n.IPAM.Type != ""
- 
+
+ 	if n.IsDefaultGW {
+		n.IsGW = true
+	}
 	br, brInterface, err := setupBridge(n)
 	 if err != nil {
 		 return err

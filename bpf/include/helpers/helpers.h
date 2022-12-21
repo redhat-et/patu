@@ -48,6 +48,10 @@ limitations under the License.
     trace_printk(____fmt, sizeof(____fmt), ##__VA_ARGS__);                     \
   })
 
+#ifndef FORCE_READ
+#define FORCE_READ(X) (*(volatile typeof(X)*)&X)
+#endif
+
 #ifndef BPF_FUNC
 #define BPF_FUNC(NAME, ...) (*NAME)(__VA_ARGS__) = (void *)BPF_FUNC_##NAME
 #endif
@@ -55,9 +59,9 @@ limitations under the License.
 struct socket_key {
   __u32 src_ip;
   __u32 dst_ip;
-  __u16 src_port;
-  __u16 dst_port;
-};
+  __u32 src_port;
+  __u32 dst_port;
+} __attribute__((packed));
 
 enum cni_config_key { SUBNET_IP, CIDR, DEBUG };
 
