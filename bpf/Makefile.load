@@ -12,7 +12,7 @@ endif
 # map targets for cleanup.
 # NOTE: SOCKHASH and SOCKMAP type map doesn't support BTF types.
 load-sockops-redir-map:
-	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/sockops_redir_map type sockhash key 12 value 4 entries 65535 name sockops_redir_map
+	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] || sudo bpftool map create $(PROG_MOUNT_PATH)/sockops_redir_map type sockhash key 16 value 4 entries 65535 name sockops_redir_map
 unload-sockops-redir-map:
 	sudo rm -f $(PROG_MOUNT_PATH)/sockops_redir_map
 load-cni-config-map:
@@ -23,34 +23,6 @@ unload-cni-config-map:
 unload-all-maps:
 	sudo rm -Rf $(PROG_MOUNT_PATH)/
 
-# Progs related targets
-load-connect4:
-	sudo bpftool -m -p -d prog load patu_connect4.o $(PROG_MOUNT_PATH)/connect4
-attach-connect4: 
-	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
-detach-connect4:
-	sudo bpftool -p -d cgroup detach $(CGROUP2_PATH) connect4 pinned $(PROG_MOUNT_PATH)/connect4
-unload-connect4:
-	sudo rm $(PROG_MOUNT_PATH)/connect4
-
-load-recvmsg4:
-	sudo bpftool -m -p -d prog load patu_recvmsg4.o $(PROG_MOUNT_PATH)/recvmsg4
-attach-recvmsg4: 
-	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
-detach-recvmsg4:
-	sudo bpftool -p -d cgroup detach $(CGROUP2_PATH) recvmsg4 pinned $(PROG_MOUNT_PATH)/recvmsg4
-unload-recvmsg4:
-	sudo rm $(PROG_MOUNT_PATH)/recvmsg4
-
-load-sendmsg4:
-	sudo bpftool -m -p -d prog load patu_sendmsg4.o $(PROG_MOUNT_PATH)/sendmsg4
-attach-sendmsg4: 
-	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
-detach-sendmsg4:
-	sudo bpftool -p -d cgroup detach $(CGROUP2_PATH) sendmsg4 pinned $(PROG_MOUNT_PATH)/sendmsg4
-unload-sendmsg4:
-	sudo rm $(PROG_MOUNT_PATH)/sendmsg4
-
 load-sockops: 
 	[ -f $(PROG_MOUNT_PATH)/cni_config_map ] && \
 	[ -f $(PROG_MOUNT_PATH)/sockops_redir_map ] && \
@@ -59,7 +31,7 @@ load-sockops:
 		map name cni_config_map pinned $(PROG_MOUNT_PATH)/cni_config_map ||\
 		sudo bpftool -m -p -d prog load patu_sockops.o $(PROG_MOUNT_PATH)/sockops pinmaps $(PROG_MOUNT_PATH)
 attach-sockops:
-	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
+	sudo bpftool -m -p -d cgroup attach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops multi
 detach-sockops:
 	sudo bpftool -m -p -d cgroup detach $(CGROUP2_PATH) sock_ops pinned $(PROG_MOUNT_PATH)/sockops
 unload-sockops:

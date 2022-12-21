@@ -33,33 +33,6 @@ load-maps: load-sockops-redir-map load-cni-config-map
 unload-maps: unload-sockops-redir-map unload-cni-config-map unload-all-maps
 
 # Passthrough targets.
-load-connect4:
-	make -f Makefile.load load-connect4
-attach-connect4: 
-	make -f Makefile.load attach-connect4
-detach-connect4:
-	make -f Makefile.load detach-connect4
-unload-connect4:
-	make -f Makefile.load unload-connect4
-
-load-recvmsg4:
-	make -f Makefile.load load-recvmsg4
-attach-recvmsg4: 
-	make -f Makefile.load attach-recvmsg4
-detach-recvmsg4: 
-	make -f Makefile.load detach-recvmsg4
-unload-recvmsg4:
-	make -f Makefile.load unload-recvmsg4
-
-load-sendmsg4:
-	make -f Makefile.load load-sendmsg4
-attach-sendmsg4: 
-	make -f Makefile.load attach-sendmsg4
-detach-sendmsg4: 
-	make -f Makefile.load detach-sendmsg4
-unload-sendmsg4:
-	make -f Makefile.load unload-sendmsg4
-
 load-sockops:
 	make -f Makefile.load load-sockops
 attach-sockops:
@@ -87,9 +60,9 @@ detach-sk-msg:
 unload-sk-msg:
 	make -f Makefile.load unload-sk-msg
 
-load-prog: load-sockops load-sk-msg load-sendmsg4 load-recvmsg4 # load-connect4 load-sk-skb
-attach-prog: attach-sockops attach-sk-msg attach-sendmsg4 attach-recvmsg4 # attach-connect4 attach-sk-skb
-detach-prog: detach-sk-msg detach-sockops detach-sendmsg4 detach-recvmsg4 # detach-connect4 detach-sk-skb
-unload-prog: unload-sk-msg unload-sockops unload-sendmsg4 unload-recvmsg4 # unload-connect4 unload-sk-skb
+load-prog: load-sockops load-sk-msg # load-sk-skb
+attach-prog: attach-sockops attach-sk-msg # attach-sk-skb
+detach-prog: detach-sk-msg detach-sockops # detach-sk-skb
+unload-prog: unload-sk-msg unload-sockops # unload-sk-skb
 
 pre-commit-checks: lint compile
