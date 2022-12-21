@@ -49,7 +49,7 @@ limitations under the License.
   })
 
 #ifndef FORCE_READ
-#define FORCE_READ(X) (*(volatile typeof(X)*)&X)
+#define FORCE_READ(X) (*(volatile typeof(X) *)&X)
 #endif
 
 #ifndef BPF_FUNC

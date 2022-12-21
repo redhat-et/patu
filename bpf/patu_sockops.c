@@ -49,10 +49,6 @@ static inline int process_sockops_ipv4(struct bpf_sock_ops *skops) {
   if (in_subnet_range(skops->local_ip4)) {
     struct socket_key sockkey = {};
     extract_socket_key_v4(skops, &sockkey);
-    print_info("[sockops] Key added. op = %d, port %X --> %X\n",
-                 skops->op, sockkey.src_port, sockkey.dst_port);
-    print_info("[sockops] Key added. op = %d, ip %X --> %X\n",
-                 skops->op, sockkey.src_ip, sockkey.dst_ip);
     int ret =
         sock_hash_update(skops, &sockops_redir_map, &sockkey, BPF_NOEXIST);
     if (ret != 0) {
@@ -74,11 +70,7 @@ __section("sockops") int patu_sockops(struct bpf_sock_ops *skops) {
   case BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB:
   case BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB:
     if (family == 2) { // AF_INET,refer socket.h
-        print_info("--------------------------------");
-      print_info("[sockops] ip : %X -->  %X", skops->local_ip4, skops->remote_ip4);
-      print_info("[sockops] port: %X --> %X", skops->local_port, skops->remote_port);
       process_sockops_ipv4(skops);
-      print_info("--------------------------------");
     }
     break;
   default:
