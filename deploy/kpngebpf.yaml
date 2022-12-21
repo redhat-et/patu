@@ -51,7 +51,7 @@ spec:
         name: kpng-ebpf-tools
         securityContext:
           privileged: true
-        command: [ "/bin/bash", "-c", "--", "mount bpffs /sys/fs/bpf -t bpf && sleep infinity" ]
+        command: [ "/bin/bash", "-c", "--", "sleep infinity" ]
         volumeMounts:
         - name: modules
           mountPath: /lib/modules
